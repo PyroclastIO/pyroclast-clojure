@@ -1,4 +1,4 @@
-(defproject pyroclast-clojure "0.1.0-SNAPSHOT"
+(defproject io.pyroclast/pyroclast-clojure "0.1.0-SNAPSHOT"
   :description "A Clojure client for Pyroclast"
   :url "https://github.com/onyx-platform/pyroclast-clojure"
   :license {:name "Eclipse Public License"
