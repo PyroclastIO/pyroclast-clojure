@@ -4,7 +4,9 @@ A Clojure library for sending events to a Pyroclast topic.
 
 ## Usage
 
-FIXME
+```clojure
+(require '[pyroclast-clojure.client :as client])
+
 (def config
   {:user-token "<your user token>"
    :api-token "<your api token>"
@@ -12,7 +14,8 @@ FIXME
    :topic-id "<your topic id>"
    :format :json})
 
-(send-event config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+(client/send-event config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+```
 
 ## License
 

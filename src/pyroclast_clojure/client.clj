@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.core
+(ns pyroclast-clojure.client
   (:require [clojure.string :refer [join]]
             [clj-http.client :as client]
             [cheshire.core :refer [generate-string]]))
