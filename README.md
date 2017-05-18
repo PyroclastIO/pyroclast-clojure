@@ -10,11 +10,11 @@ A Clojure library for sending events to a Pyroclast topic.
 (def config
   {:user-token "<your user token>"
    :api-token "<your api token>"
-   :endpoint "<pyroclast endpoint>"
-   :topic-id "<your topic id>"
-   :format :json})
+   :endpoint "<pyroclast endpoint>"})
 
-(client/send-event! config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+(def event {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+
+(client/send-event! config topic-id event :json)
 ```
 
 ## License
