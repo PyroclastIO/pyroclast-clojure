@@ -15,9 +15,9 @@
   [fmt event]
   event)
 
-(defn send-event! [{:keys [user-token api-token endpoint] :as config} topic-id event fmt]
+(defn send-event! [{:keys [user-token api-token endpoint topic-id] :as config} event]
   (client/post (format "%s?topic-id=%s" endpoint topic-id)
                {:basic-auth [user-token api-token]
-                :body (format-event fmt event)
-                :content-type fmt
+                :body (format-event (:format config) event)
+                :content-type (:format config)
                 :accept :json}))
