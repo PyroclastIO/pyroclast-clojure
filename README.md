@@ -13,7 +13,12 @@ A Clojure library for sending events to a Pyroclast topic.
    :topic-id "<topic-id>"
    :format :json})
 
+;; Send one event
 (client/send-event! config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+
+;; Send a batch of events
+(client/send-events! config [{:event-type "page-visit" :page "/console" :timestamp 1495072836054}
+                             {:event-type "page-visit" :page "/logs" :timestamp 1495072837302}])
 
 ```
 
