@@ -39,28 +39,29 @@
         :else
         {:created false :reason "Unknown" :response response}))
 
-(defn send-synchronous-request! [endpoint api-key fmt topic-id formatted-payload]
-  (client/post (format "%s/api/v1/topic/%s/events" endpoint topic-id)
-               {:headers {"Authorization" api-key
-                          "Content-type" (content-type fmt)}
-                :body formatted-payload
-                :accept :json}))
-
 (defn process-exception [e]
   (warn e "This function should never be invoked. Open an issue on this library if you see this."))
 
 (defn send-event! [{:keys [write-api-key endpoint topic-id] :as config} event]
-  (let [payload (format-payload (:format config) event)
-        response (send-synchronous-request! endpoint write-api-key (:format config) topic-id payload)]
+  (let [response
+        (client/post (format "%s/api/v1/topic/%s/event" endpoint topic-id)
+                     {:headers {"Authorization" write-api-key
+                                "Content-type" (content-type (:format config))}
+                      :body (format-payload (:format config) event)
+                      :accept :json})]
     (process-response response)))
 
 (defn send-events! [{:keys [write-api-key endpoint topic-id] :as config} events]
-  (let [payload (format-payload (:format config) events)
-        response (send-synchronous-request! endpoint write-api-key (:format config) topic-id payload)]
+  (let [response
+        (client/post (format "%s/api/v1/topic/%s/events" endpoint topic-id)
+                     {:headers {"Authorization" write-api-key
+                                "Content-type" (content-type (:format config))}
+                      :body (format-payload (:format config) events)
+                      :accept :json})]
     (process-response response)))
 
 (defn send-event-async! [{:keys [write-api-key endpoint topic-id] :as config} callback event]
-  (client/post (format "%s/api/v1/topic/%s/events" endpoint topic-id)
+  (client/post (format "%s/api/v1/topic/%s/event" endpoint topic-id)
                {:async? true
                 :throw-exceptions false
                 :headers {"Authorization" write-api-key

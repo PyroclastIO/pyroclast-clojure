@@ -25,27 +25,25 @@ First, define a configuration.
 ### Send a batch of events synchronously
 
 ```clojure
-(client/send-events! config [{:event-type "page-visit" :page "/console" :timestamp 1495072836054}
-                             {:event-type "page-visit" :page "/logs" :timestamp 1495072837302}])
+(client/send-events! config [{:event-type "page-visit" :page "/home" :timestamp 1495072835000}
+                             {:event-type "page-visit" :page "/console" :timestamp 1495072895032}])
 ```
 
 ### Send one event asynchronously
 
 ```clojure
 (client/send-event-async!
- config
- (fn [result] (prn "Result was: " result))
- {:event-type "page-visit" :page "/console" :timestamp 1495072836054})
+  config (fn [result] (println result))
+  {:event-type "page-visit" :page "store" :timestamp 1495072835000})
 ```
 
 ### Send a batch of events asynchronously
 
 ```clojure
 (client/send-events-async!
- config
- (fn [result] (prn "Result was: " result))
- [{:event-type "page-visit" :page "/console" :timestamp 1495072836054}
-  {:event-type "page-visit" :page "/logs" :timestamp 1495072837302}])
+  config (fn [results] (println results))
+  [{:event-type "page-visit" :page "store" :timestamp 1495072835000}
+   {:event-type "page-visit" :page "console" :timestamp 1495072895032}])
 ```
 
 
