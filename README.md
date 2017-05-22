@@ -45,11 +45,3 @@ First, define a configuration.
   [{:event-type "page-visit" :page "store" :timestamp 1495072835000}
    {:event-type "page-visit" :page "console" :timestamp 1495072895032}])
 ```
-
-
-## License
-
-Copyright © 2017 Distibuted Masonry
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
