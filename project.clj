@@ -1,4 +1,4 @@
-(defproject io.pyroclast/pyroclast-clojure "0.1.0-SNAPSHOT"
+(defproject io.pyroclast/pyroclast-clojure "0.1.0"
   :description "A Clojure client for Pyroclast"
   :url "https://github.com/onyx-platform/pyroclast-clojure"
   :dependencies [[org.clojure/clojure "1.9.0-alpha16"]
