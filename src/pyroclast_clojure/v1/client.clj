@@ -1,9 +1,9 @@
 (ns pyroclast-clojure.v1.client
   (:require [clojure.string :refer [join]]
             [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [clj-http.client :as client]
-            [cheshire.core :refer [generate-string parse-string]]
-            [taoensso.timbre :refer [warn]]))
+            [cheshire.core :refer [generate-string parse-string]]))
 
 (defmulti format-payload
   (fn [fmt payload]
@@ -40,7 +40,7 @@
         {:created false :reason "Unknown" :response response}))
 
 (defn process-exception [e]
-  (warn e "This function should never be invoked. Open an issue on this library if you see this."))
+  (log/warn e "This function should never be invoked. Open an issue on this library if you see this."))
 
 (defn send-event! [{:keys [write-api-key endpoint topic-id] :as config} event]
   (let [response
