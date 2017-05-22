@@ -2,6 +2,14 @@
 
 A Clojure library for sending events to a Pyroclast topic.
 
+## Installation
+
+With Leiningen:
+
+```clojure
+[io.pyroclast/pyroclast-clojure "0.1.0"]
+```
+
 ## Usage
 
 First, define a configuration.
