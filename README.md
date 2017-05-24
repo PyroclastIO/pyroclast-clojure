@@ -76,11 +76,11 @@ First, define a configuration.
 ### Get an aggregate by name for a service
 
 ```clojure
-(client/read-aggregates config "aggregate-name")
+(client/read-aggregate config "aggregate-name")
 ```
 
 ### Get a single aggregate group by name
 
 ```clojure
-(client/read-aggregates config "aggregate-name" "group-name")
+(client/read-aggregate-group config "aggregate-name" "group-name")
 ```
