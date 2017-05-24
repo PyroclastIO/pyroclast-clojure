@@ -10,7 +10,7 @@ With Leiningen:
 [io.pyroclast/pyroclast-clojure "0.1.0"]
 ```
 
-## Usage
+## Topic APIs
 
 First, define a configuration.
 
@@ -52,4 +52,35 @@ First, define a configuration.
   config (fn [results] (println results))
   [{:event-type "page-visit" :page "store" :timestamp 1495072835000}
    {:event-type "page-visit" :page "console" :timestamp 1495072895032}])
+```
+
+## Service APIs
+
+First, define a configuration.
+
+```clojure
+(require '[pyroclast-clojure.v1.client :as client])
+
+(def config
+  {:read-api-key "<token>"
+   :endpoint "<endpoint>"
+   :service-id "<service-id>"})
+```
+
+### Get all aggregates for a service
+
+```clojure
+(client/read-aggregates config)
+```
+
+### Get an aggregate by name for a service
+
+```clojure
+(client/read-aggregates config "aggregate-name")
+```
+
+### Get a single aggregate group by name
+
+```clojure
+(client/read-aggregates config "aggregate-name" "group-name")
 ```
