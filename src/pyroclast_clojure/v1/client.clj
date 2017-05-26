@@ -39,29 +39,39 @@
         :else
         {:created false :reason "Unknown" :response response}))
 
+(defn topic-base-url [{:keys [region endpoint] :as config}]
+  (if endpoint
+    endpoint
+    (str (format "https://topic.%s.pyroclast.io" region))))
+
+(defn aggregate-base-url [{:keys [region endpoint] :as config}]
+  (if endpoint
+    endpoint
+    (str (format "https://%s.pyroclast.io" region))))
+
 (defn process-exception [e]
   (log/warn e "This function should never be invoked. Open an issue on this library if you see this."))
 
-(defn send-event! [{:keys [write-api-key endpoint topic-id] :as config} event]
+(defn send-event! [{:keys [write-api-key topic-id] :as config} event]
   (let [response
-        (client/post (format "%s/api/v1/topic/%s/event" endpoint topic-id)
+        (client/post (format "%s/api/v1/topic/%s/produce" (topic-base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
                                 "Content-type" (content-type (:format config))}
                       :body (format-payload (:format config) event)
                       :accept :json})]
     (process-topic-response response)))
 
-(defn send-events! [{:keys [write-api-key endpoint topic-id] :as config} events]
+(defn send-events! [{:keys [write-api-key topic-id] :as config} events]
   (let [response
-        (client/post (format "%s/api/v1/topic/%s/events" endpoint topic-id)
+        (client/post (format "%s/api/v1/topic/%s/bulk-produce" (topic-base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
                                 "Content-type" (content-type (:format config))}
                       :body (format-payload (:format config) events)
                       :accept :json})]
     (process-topic-response response)))
 
-(defn send-event-async! [{:keys [write-api-key endpoint topic-id] :as config} callback event]
-  (client/post (format "%s/api/v1/topic/%s/event" endpoint topic-id)
+(defn send-event-async! [{:keys [write-api-key topic-id] :as config} callback event]
+  (client/post (format "%s/api/v1/topic/%s/produce" (topic-base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
                 :headers {"Authorization" write-api-key
@@ -71,8 +81,8 @@
                (fn [response] (callback (process-topic-response response)))
                (fn [e] (process-exception e))))
 
-(defn send-events-async! [{:keys [write-api-key endpoint topic-id] :as config} callback events]
-  (client/post (format "%s/api/v1/topic/%s/events" endpoint topic-id)
+(defn send-events-async! [{:keys [write-api-key topic-id] :as config} callback events]
+  (client/post (format "%s/api/v1/topic/%s/bulk-produce" (topic-base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
                 :headers {"Authorization" write-api-key
@@ -96,25 +106,25 @@
         :else
         {:success? false :reason "Unknown" :response response}))
 
-(defn read-aggregates [{:keys [read-api-key endpoint service-id]}]
+(defn read-aggregates [{:keys [read-api-key service-id] :as config}]
   (let [response
-        (client/get (format "%s/api/v1/service/%s" endpoint service-id)
+        (client/get (format "%s/api/v1/service/%s" (aggregate-base-url config) service-id)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
     (process-service-response response)))
 
-(defn read-aggregate [{:keys [read-api-key endpoint service-id]} aggregate-name]
+(defn read-aggregate [{:keys [read-api-key service-id :as config]} aggregate-name]
   (let [response
-        (client/get (format "%s/api/v1/service/%s/aggregate/%s" endpoint service-id aggregate-name)
+        (client/get (format "%s/api/v1/service/%s/aggregate/%s" (aggregate-base-url config) service-id aggregate-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
     (process-service-response response)))
 
-(defn read-aggregate-group [{:keys [read-api-key endpoint service-id]} aggregate-name group-name]
+(defn read-aggregate-group [{:keys [read-api-key service-id :as config]} aggregate-name group-name]
   (let [response
-        (client/get (format "%s/api/v1/service/%s/aggregate/%s/group/%s" endpoint service-id aggregate-name group-name)
+        (client/get (format "%s/api/v1/service/%s/aggregate/%s/group/%s" (aggregate-base-url config) service-id aggregate-name group-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
