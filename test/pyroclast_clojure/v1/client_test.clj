@@ -3,9 +3,9 @@
             [clojure.test :refer [is deftest]]))
 
 (def write-config
-  {:write-api-key "18c57dd4-dfe4-4460-826f-c1680435c979"
+  {:write-api-key "FILLMEIN"
    :region "test"
-   :topic-id "topic-0b7f355e-a5b4-4f9f-9887-5df6c65dec1e"
+   :topic-id "FILLMEIN"
    :format :json})
 
 (deftest producer-tests
@@ -33,9 +33,9 @@
            @ret2))))
 
 (def read-config
-  {:read-api-key "1b08e398-7cfc-4449-8ade-5849a8f72eae"
+  {:read-api-key "FILLMEIN"
    :region "test"
-   :service-id "4w9aA8RPn81evM"})
+   :service-id "FILLMEIN"})
 
 (comment (client/read-aggregates config)
          (client/read-aggregate config "group-by-vals")
