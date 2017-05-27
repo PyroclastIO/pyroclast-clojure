@@ -39,22 +39,17 @@
         :else
         {:created false :reason "Unknown" :response response}))
 
-(defn topic-base-url [{:keys [region endpoint] :as config}]
+(defn base-url [{:keys [region endpoint] :as config}]
   (if endpoint
     endpoint
-    (str (format "https://topic.%s.pyroclast.io" region))))
-
-(defn aggregate-base-url [{:keys [region endpoint] :as config}]
-  (if endpoint
-    endpoint
-    (str (format "https://%s.pyroclast.io" region))))
+    (str (format "https://api.%s.pyroclast.io" region))))
 
 (defn process-exception [e]
   (log/warn e "This function should never be invoked. Open an issue on this library if you see this."))
 
 (defn send-event! [{:keys [write-api-key topic-id] :as config} event]
   (let [response
-        (client/post (format "%s/api/v1/topic/%s/produce" (topic-base-url config) topic-id)
+        (client/post (format "%s/v1/topics/%s/produce" (base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
                                 "Content-type" (content-type (:format config))}
                       :body (format-payload (:format config) event)
@@ -63,7 +58,7 @@
 
 (defn send-events! [{:keys [write-api-key topic-id] :as config} events]
   (let [response
-        (client/post (format "%s/api/v1/topic/%s/bulk-produce" (topic-base-url config) topic-id)
+        (client/post (format "%s/v1/topics/%s/bulk-produce" (base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
                                 "Content-type" (content-type (:format config))}
                       :body (format-payload (:format config) events)
@@ -71,7 +66,7 @@
     (process-topic-response response)))
 
 (defn send-event-async! [{:keys [write-api-key topic-id] :as config} callback event]
-  (client/post (format "%s/api/v1/topic/%s/produce" (topic-base-url config) topic-id)
+  (client/post (format "%s/v1/topics/%s/produce" (base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
                 :headers {"Authorization" write-api-key
@@ -82,7 +77,7 @@
                (fn [e] (process-exception e))))
 
 (defn send-events-async! [{:keys [write-api-key topic-id] :as config} callback events]
-  (client/post (format "%s/api/v1/topic/%s/bulk-produce" (topic-base-url config) topic-id)
+  (client/post (format "%s/v1/topics/%s/bulk-produce" (base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
                 :headers {"Authorization" write-api-key
@@ -108,7 +103,7 @@
 
 (defn read-aggregates [{:keys [read-api-key service-id] :as config}]
   (let [response
-        (client/get (format "%s/api/v1/service/%s" (aggregate-base-url config) service-id)
+        (client/get (format "%s/v1/service/%s" (base-url config) service-id)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
@@ -116,7 +111,7 @@
 
 (defn read-aggregate [{:keys [read-api-key service-id :as config]} aggregate-name]
   (let [response
-        (client/get (format "%s/api/v1/service/%s/aggregate/%s" (aggregate-base-url config) service-id aggregate-name)
+        (client/get (format "%s/v1/service/%s/aggregates/%s" (base-url config) service-id aggregate-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
@@ -124,7 +119,7 @@
 
 (defn read-aggregate-group [{:keys [read-api-key service-id :as config]} aggregate-name group-name]
   (let [response
-        (client/get (format "%s/api/v1/service/%s/aggregate/%s/group/%s" (aggregate-base-url config) service-id aggregate-name group-name)
+        (client/get (format "%s/v1/service/%s/aggregates/%s/group/%s" (base-url config) service-id aggregate-name group-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
