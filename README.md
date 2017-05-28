@@ -19,7 +19,7 @@ First, define a configuration.
 
 (def config
   {:write-api-key "<token>"
-   :endpoint "<endpoint>"
+   :region "<region>"
    :topic-id "<topic-id>"
    :format :json})
 ```
@@ -63,7 +63,7 @@ First, define a configuration.
 
 (def config
   {:read-api-key "<token>"
-   :endpoint "<endpoint>"
+   :region "<region>"
    :service-id "<service-id>"})
 ```
 
