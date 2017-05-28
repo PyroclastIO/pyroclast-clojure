@@ -12,7 +12,9 @@ With Leiningen:
 
 ## Topic APIs
 
-First, define a configuration.
+### Writing events
+
+Define a configuration.
 
 ```clojure
 (require '[pyroclast-clojure.v1.client :as client])
@@ -23,20 +25,20 @@ First, define a configuration.
    :format :json})
 ```
 
-### Send one event synchronously
+#### Send one event synchronously
 
 ```clojure
 (client/send-event! config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
 ```
 
-### Send a batch of events synchronously
+#### Send a batch of events synchronously
 
 ```clojure
 (client/send-events! config [{:event-type "page-visit" :page "/home" :timestamp 1495072835000}
                              {:event-type "page-visit" :page "/console" :timestamp 1495072895032}])
 ```
 
-### Send one event asynchronously
+#### Send one event asynchronously
 
 ```clojure
 (client/send-event-async!
@@ -44,7 +46,7 @@ First, define a configuration.
   {:event-type "page-visit" :page "store" :timestamp 1495072835000})
 ```
 
-### Send a batch of events asynchronously
+#### Send a batch of events asynchronously
 
 ```clojure
 (client/send-events-async!
@@ -53,9 +55,42 @@ First, define a configuration.
    {:event-type "page-visit" :page "console" :timestamp 1495072895032}])
 ```
 
+### Reading events
+
+Define a configuration.
+
+```clojure
+(require '[pyroclast-clojure.v1.client :as client])
+
+(def config
+  {:read-api-key "<token>"
+   :topic-id "<topic-id>"
+   :format :json})
+```
+
+#### Subscribe to a topic
+
+```clojure
+(client/subscribe-to-topic! config "your-subscriber-name")
+```
+
+#### Poll subscribed topic
+
+```clojure
+(client/poll-topic! config "your-subscriber-name")
+```
+
+#### Commit read records
+
+```clojure
+(client/commit-read-records! config "your-subscriber-name")
+```
+
 ## Service APIs
 
-First, define a configuration.
+### Read service aggregations
+
+Define a configuration.
 
 ```clojure
 (require '[pyroclast-clojure.v1.client :as client])
@@ -66,19 +101,19 @@ First, define a configuration.
    :service-id "<service-id>"})
 ```
 
-### Get all aggregates for a service
+#### Get all aggregates for a service
 
 ```clojure
 (client/read-aggregates config)
 ```
 
-### Get an aggregate by name for a service
+#### Get an aggregate by name for a service
 
 ```clojure
 (client/read-aggregate config "aggregate-name")
 ```
 
-### Get a single aggregate group by name
+#### Get a single aggregate group by name
 
 ```clojure
 (client/read-aggregate-group config "aggregate-name" "group-name")

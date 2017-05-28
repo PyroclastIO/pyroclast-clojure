@@ -7,6 +7,8 @@
 
 (def default-region "us-east-1")
 
+(def unknown-message "Unknown problem. Open an issue on this repository if you're seeing this status.")
+
 (defmulti format-payload
   (fn [fmt payload]
     fmt))
@@ -39,7 +41,7 @@
         {:created false :reason "API key unauthorized to perform this action."}
 
         :else
-        {:created false :reason "Unknown" :response response}))
+        {:created false :reason unknown-message :response response}))
 
 (defn base-url [{:keys [region endpoint] :or {region default-region} :as config}]
   (if endpoint
@@ -101,7 +103,7 @@
         {:success? false :reason "Aggregate not found"}
 
         :else
-        {:success? false :reason "Unknown" :response response}))
+        {:success? false :reason unknown-message :response response}))
 
 (defn read-aggregates [{:keys [read-api-key service-id] :as config}]
   (let [response
@@ -126,3 +128,61 @@
                      :accept :json
                      :throw-exceptions? false})]
     (process-service-response response)))
+
+(defn process-subscribe-response [{:keys [status body] :as response}]
+  (cond (= status 200)
+        {:success? true
+         :group-id (:group-id (parse-string body true))}
+
+        (= status 401)
+        {:success? false :reason "API key unauthorized to perform this action."}
+
+        :else
+        {:success? false :reason unknown-message :response response}))
+
+(defn subscribe-to-topic! [{:keys [read-api-key topic-id] :as config} subscriber-name]
+  (when (not (re-matches #"[a-zA-Z0-9]+" subscriber-name))
+    (throw (ex-info "Subscriber name must be a non-empty string of alphanumeric characters." {})))
+  (let [response
+        (client/post (format "%s/v1/topics/%s/subscribe/%s" (base-url config) topic-id subscriber-name)
+                     {:headers {"Authorization" read-api-key}
+                      :accept :json
+                      :throw-exceptions? false})]
+    (process-subscribe-response response)))
+
+(defn process-poll-response [{:keys [status body] :as response}]
+  (cond (= status 200)
+        {:success? true
+         :records (parse-string body true)}
+
+        (= status 401)
+        {:success? false :reason "API key unauthorized to perform this action."}
+
+        :else
+        {:success? false :reason unknown-message :response response}))
+
+(defn poll-topic! [{:keys [read-api-key topic-id] :as config} subscriber-name]
+  (let [response
+        (client/post (format "%s/v1/topics/%s/poll/%s" (base-url config) topic-id subscriber-name)
+                     {:headers {"Authorization" read-api-key}
+                      :accept :json
+                      :throw-exceptions? false})]
+    (process-poll-response response)))
+
+(defn process-commit-read-response [{:keys [status body] :as response}]
+  (cond (= status 200)
+        {:success? true}
+
+        (= status 401)
+        {:success? false :reason "API key unauthorized to perform this action."}
+
+        :else
+        {:success? false :reason unknown-message :response response}))
+
+(defn commit-read-records! [{:keys [read-api-key topic-id] :as config} subscriber-name]
+  (let [response
+        (client/post (format "%s/v1/topics/%s/poll/%s/commit" (base-url config) topic-id subscriber-name)
+                     {:headers {"Authorization" read-api-key}
+                      :accept :json
+                      :throw-exceptions? false})]
+    (process-commit-read-response response)))
