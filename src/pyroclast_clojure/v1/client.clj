@@ -91,44 +91,6 @@
                (fn [response] (callback (process-topic-response response)))
                (fn [e] (process-exception e))))
 
-(defn process-service-response [{:keys [status body] :as response}]
-  (cond (= status 200)
-        {:success? true
-         :aggregates (parse-string body true)}
-
-        (= status 401)
-        {:success? false :reason "API key unauthorized to perform this action."}
-
-        (= status 404)
-        {:success? false :reason "Aggregate not found"}
-
-        :else
-        {:success? false :reason unknown-message :response response}))
-
-(defn read-aggregates [{:keys [read-api-key service-id] :as config}]
-  (let [response
-        (client/get (format "%s/v1/service/%s" (base-url config) service-id)
-                    {:headers {"Authorization" read-api-key}
-                     :accept :json
-                     :throw-exceptions? false})]
-    (process-service-response response)))
-
-(defn read-aggregate [{:keys [read-api-key service-id :as config]} aggregate-name]
-  (let [response
-        (client/get (format "%s/v1/service/%s/aggregates/%s" (base-url config) service-id aggregate-name)
-                    {:headers {"Authorization" read-api-key}
-                     :accept :json
-                     :throw-exceptions? false})]
-    (process-service-response response)))
-
-(defn read-aggregate-group [{:keys [read-api-key service-id :as config]} aggregate-name group-name]
-  (let [response
-        (client/get (format "%s/v1/service/%s/aggregates/%s/group/%s" (base-url config) service-id aggregate-name group-name)
-                    {:headers {"Authorization" read-api-key}
-                     :accept :json
-                     :throw-exceptions? false})]
-    (process-service-response response)))
-
 (defn process-subscribe-response [{:keys [status body] :as response}]
   (cond (= status 200)
         {:success? true
@@ -186,3 +148,41 @@
                       :accept :json
                       :throw-exceptions? false})]
     (process-commit-read-response response)))
+
+(defn process-service-response [{:keys [status body] :as response}]
+  (cond (= status 200)
+        {:success? true
+         :aggregates (parse-string body true)}
+
+        (= status 401)
+        {:success? false :reason "API key unauthorized to perform this action."}
+
+        (= status 404)
+        {:success? false :reason "Aggregate not found"}
+
+        :else
+        {:success? false :reason unknown-message :response response}))
+
+(defn read-aggregates [{:keys [read-api-key service-id] :as config}]
+  (let [response
+        (client/get (format "%s/v1/services/%s" (base-url config) service-id)
+                    {:headers {"Authorization" read-api-key}
+                     :accept :json
+                     :throw-exceptions? false})]
+    (process-service-response response)))
+
+(defn read-aggregate [{:keys [read-api-key service-id :as config]} aggregate-name]
+  (let [response
+        (client/get (format "%s/v1/services/%s/aggregates/%s" (base-url config) service-id aggregate-name)
+                    {:headers {"Authorization" read-api-key}
+                     :accept :json
+                     :throw-exceptions? false})]
+    (process-service-response response)))
+
+(defn read-aggregate-group [{:keys [read-api-key service-id :as config]} aggregate-name group-name]
+  (let [response
+        (client/get (format "%s/v1/services/%s/aggregates/%s/group/%s" (base-url config) service-id aggregate-name group-name)
+                    {:headers {"Authorization" read-api-key}
+                     :accept :json
+                     :throw-exceptions? false})]
+    (process-service-response response)))
