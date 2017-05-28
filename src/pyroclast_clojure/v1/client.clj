@@ -5,6 +5,8 @@
             [clj-http.client :as client]
             [cheshire.core :refer [generate-string parse-string]]))
 
+(def default-region "us-east-1")
+
 (defmulti format-payload
   (fn [fmt payload]
     fmt))
@@ -39,7 +41,7 @@
         :else
         {:created false :reason "Unknown" :response response}))
 
-(defn base-url [{:keys [region endpoint] :as config}]
+(defn base-url [{:keys [region endpoint] :or {region default-region} :as config}]
   (if endpoint
     endpoint
     (str (format "https://api.%s.pyroclast.io" region))))

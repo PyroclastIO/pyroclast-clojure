@@ -19,7 +19,6 @@ First, define a configuration.
 
 (def config
   {:write-api-key "<token>"
-   :region "<region>"
    :topic-id "<topic-id>"
    :format :json})
 ```
