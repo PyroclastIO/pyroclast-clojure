@@ -103,7 +103,7 @@
         {:success? false :reason unknown-message :response response}))
 
 (defn subscribe-to-topic! [{:keys [read-api-key topic-id] :as config} subscriber-name]
-  (when (not (re-matches #"[a-zA-Z0-9]+" subscriber-name))
+  (when (not (re-matches #"[a-zA-Z0-9-_]+" subscriber-name))
     (throw (ex-info "Subscriber name must be a non-empty string of alphanumeric characters." {})))
   (let [response
         (client/post (format "%s/v1/topics/%s/subscribe/%s" (base-url config) topic-id subscriber-name)
