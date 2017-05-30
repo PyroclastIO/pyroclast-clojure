@@ -163,25 +163,25 @@
         :else
         {:success? false :reason unknown-message :response response}))
 
-(defn read-aggregates [{:keys [read-api-key service-id] :as config}]
+(defn read-aggregates [{:keys [read-api-key deployment-id] :as config}]
   (let [response
-        (client/get (format "%s/v1/services/%s" (base-url config) service-id)
+        (client/get (format "%s/v1/deployments/%s/aggregates" (base-url config) deployment-id)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
     (process-service-response response)))
 
-(defn read-aggregate [{:keys [read-api-key service-id :as config]} aggregate-name]
+(defn read-aggregate [{:keys [read-api-key deployment-id :as config]} aggregate-name]
   (let [response
-        (client/get (format "%s/v1/services/%s/aggregates/%s" (base-url config) service-id aggregate-name)
+        (client/get (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) deployment-id aggregate-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]
     (process-service-response response)))
 
-(defn read-aggregate-group [{:keys [read-api-key service-id :as config]} aggregate-name group-name]
+(defn read-aggregate-group [{:keys [read-api-key deployment-id :as config]} aggregate-name group-name]
   (let [response
-        (client/get (format "%s/v1/services/%s/aggregates/%s/group/%s" (base-url config) service-id aggregate-name group-name)
+        (client/get (format "%s/v1/deployments/%s/aggregates/%s/group/%s" (base-url config) deployment-id aggregate-name group-name)
                     {:headers {"Authorization" read-api-key}
                      :accept :json
                      :throw-exceptions? false})]

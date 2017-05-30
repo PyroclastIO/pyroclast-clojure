@@ -86,9 +86,9 @@ Define a configuration.
 (client/commit-read-records! config "your-subscriber-name")
 ```
 
-## Service APIs
+## Deployed Service APIs
 
-### Read service aggregations
+### Read deployed service aggregations
 
 Define a configuration.
 
@@ -98,16 +98,16 @@ Define a configuration.
 (def config
   {:read-api-key "<token>"
    :region "<region>"
-   :service-id "<service-id>"})
+   :deployment-id "<deployment-id>"})
 ```
 
-#### Get all aggregates for a service
+#### Get all aggregates for a deployed service
 
 ```clojure
 (client/read-aggregates config)
 ```
 
-#### Get an aggregate by name for a service
+#### Get an aggregate by name for a deployed service
 
 ```clojure
 (client/read-aggregate config "aggregate-name")
