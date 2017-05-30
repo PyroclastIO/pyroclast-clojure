@@ -35,7 +35,7 @@
 (def read-config
   {:read-api-key "FILLMEIN"
    :region "test"
-   :service-id "FILLMEIN"})
+   :deployment-id "FILLMEIN"})
 
 (comment (client/read-aggregates config)
          (client/read-aggregate config "group-by-vals")
