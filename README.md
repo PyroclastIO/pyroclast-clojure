@@ -25,17 +25,21 @@ Define a configuration.
    :format :json})
 ```
 
+Events must contain a value key, which describes the message, and may also
+contain a optional key key, which will be used to route particular messages to
+particular topic partitions, and can be accessed for other purposes.
+
 #### Send one event synchronously
 
 ```clojure
-(client/send-event! config {:event-type "page-visit" :page "/home" :timestamp 1495072835000})
+(client/send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}})
 ```
 
 #### Send a batch of events synchronously
 
 ```clojure
-(client/send-events! config [{:event-type "page-visit" :page "/home" :timestamp 1495072835000}
-                             {:event-type "page-visit" :page "/console" :timestamp 1495072895032}])
+(client/send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}])
 ```
 
 #### Send one event asynchronously
@@ -43,7 +47,7 @@ Define a configuration.
 ```clojure
 (client/send-event-async!
   config (fn [result] (println result))
-  {:event-type "page-visit" :page "store" :timestamp 1495072835000})
+  {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}})
 ```
 
 #### Send a batch of events asynchronously
@@ -51,8 +55,8 @@ Define a configuration.
 ```clojure
 (client/send-events-async!
   config (fn [results] (println results))
-  [{:event-type "page-visit" :page "store" :timestamp 1495072835000}
-   {:event-type "page-visit" :page "console" :timestamp 1495072895032}])
+  [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+   {:value {:event-type "page-visit" :page "console" :timestamp 1495072895032}}])
 ```
 
 ### Reading events
