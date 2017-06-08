@@ -51,7 +51,12 @@
 (defn process-exception [e]
   (log/warn e "This function should never be invoked. Open an issue on this library if you see this."))
 
+(defn validate-event! [event]
+  (when-not (contains? event :value)
+    (throw (ex-info "Event requires :value key" {:event event}))))
+
 (defn send-event! [{:keys [write-api-key topic-id] :as config} event]
+  (validate-event! event)
   (let [response
         (client/post (format "%s/v1/topics/%s/produce" (base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
@@ -61,6 +66,7 @@
     (process-topic-response response)))
 
 (defn send-events! [{:keys [write-api-key topic-id] :as config} events]
+  (run! validate-event! events)
   (let [response
         (client/post (format "%s/v1/topics/%s/bulk-produce" (base-url config) topic-id)
                      {:headers {"Authorization" write-api-key
@@ -70,6 +76,7 @@
     (process-topic-response response)))
 
 (defn send-event-async! [{:keys [write-api-key topic-id] :as config} callback event]
+  (validate-event! event)
   (client/post (format "%s/v1/topics/%s/produce" (base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
@@ -81,6 +88,7 @@
                (fn [e] (process-exception e))))
 
 (defn send-events-async! [{:keys [write-api-key topic-id] :as config} callback events]
+  (run! validate-event! events)
   (client/post (format "%s/v1/topics/%s/bulk-produce" (base-url config) topic-id)
                {:async? true
                 :throw-exceptions false
