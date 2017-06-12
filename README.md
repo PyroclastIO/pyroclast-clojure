@@ -7,7 +7,7 @@ A Clojure library for sending events to a Pyroclast topic.
 With Leiningen:
 
 ```clojure
-[io.pyroclast/pyroclast-clojure "0.1.1"]
+[io.pyroclast/pyroclast-clojure "0.1.3"]
 ```
 
 ## Topic APIs
