@@ -1,6 +1,5 @@
 (ns pyroclast-clojure.v1.client
   (:require [clojure.string :refer [join]]
-            [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [cheshire.core :refer [generate-string parse-string]]))
