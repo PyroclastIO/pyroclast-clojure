@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.v1.roaming.compound
+(ns pyroclast-clojure.v1.roaming.compound-test
   (:require [clojure.test :refer :all]
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.seq :as pseq]
