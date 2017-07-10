@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.aggregations
+(ns pyroclast-clojure.v1.roaming.aggregations
   (:refer-clojure :exclude [count min max group-by])
   (:require [clojure.core :as cc]
             [pyroclast-clojure.util :as u]))

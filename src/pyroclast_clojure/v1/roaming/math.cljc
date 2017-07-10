@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.math
+(ns pyroclast-clojure.v1.roaming.math
   (:refer-clojure :exclude [mod min max])
   (:require [pyroclast-clojure.util :as u]))
 

@@ -1,14 +1,14 @@
-(ns pyroclast-clojure.roaming.compound
+(ns pyroclast-clojure.v1.roaming.compound
   (:require [clojure.test :refer :all]
-            [pyroclast-clojure.roaming.client :as roaming]
-            [pyroclast-clojure.roaming.seq :as pseq]
-            [pyroclast-clojure.roaming.string :as string]
-            [pyroclast-clojure.roaming.math :as math]
-            [pyroclast-clojure.roaming.service :as s]
-            [pyroclast-clojure.roaming.filters :as f]
-            [pyroclast-clojure.roaming.aggregations :as a]
-            [pyroclast-clojure.roaming.coerce :as c]
-            [pyroclast-clojure.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.client :as roaming]
+            [pyroclast-clojure.v1.roaming.seq :as pseq]
+            [pyroclast-clojure.v1.roaming.string :as string]
+            [pyroclast-clojure.v1.roaming.math :as math]
+            [pyroclast-clojure.v1.roaming.service :as s]
+            [pyroclast-clojure.v1.roaming.filters :as f]
+            [pyroclast-clojure.v1.roaming.aggregations :as a]
+            [pyroclast-clojure.v1.roaming.coerce :as c]
+            [pyroclast-clojure.v1.roaming.topic :as t]))
 
 (def config {:endpoint "http://localhost:10557"})
 

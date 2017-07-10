@@ -1,9 +1,9 @@
-(ns pyroclast-clojure.roaming.coerce-test
+(ns pyroclast-clojure.v1.roaming.coerce-test
   (:require [clojure.test :refer :all]
-            [pyroclast-clojure.roaming.client :as roaming]
-            [pyroclast-clojure.roaming.coerce :as coerce]
-            [pyroclast-clojure.roaming.service :as s]
-            [pyroclast-clojure.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.client :as roaming]
+            [pyroclast-clojure.v1.roaming.coerce :as coerce]
+            [pyroclast-clojure.v1.roaming.service :as s]
+            [pyroclast-clojure.v1.roaming.topic :as t]))
 
 (def config {:endpoint "http://localhost:10557"})
 

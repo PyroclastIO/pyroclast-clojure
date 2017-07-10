@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.client
+(ns pyroclast-clojure.v1.roaming.client
   (:require [clojure.walk :as w]
             [clj-http.client :as client]
             [cheshire.core :refer [generate-string parse-string]]))

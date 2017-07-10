@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.roaming.seq
+(ns pyroclast-clojure.v1.roaming.seq
   (:refer-clojure :exclude [first second rest butlast nth rand-nth
                             count reverse sort shuffle frequencies
                             seq distinct take take-nth drop drop-last

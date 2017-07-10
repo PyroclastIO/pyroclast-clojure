@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.roaming.string
+(ns pyroclast-clojure.v1.roaming.string
   (:refer-clojure :exclude [replace])
   (:require [pyroclast-clojure.util :as u]))
 

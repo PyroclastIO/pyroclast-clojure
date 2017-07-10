@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.roaming.service
+(ns pyroclast-clojure.v1.roaming.service
   (:require [cheshire.core :refer [generate-string]]))
 
 (defn new-service []

@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.roaming.topic
+(ns pyroclast-clojure.v1.roaming.topic
   (:require [pyroclast-clojure.util :as u]))
 
 (defn input-topic [service topic-id]

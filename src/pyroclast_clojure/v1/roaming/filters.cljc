@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.filters
+(ns pyroclast-clojure.v1.roaming.filters
   (:refer-clojure :exclude [coll? distinct? empty? even? => > >=
                             < <= = not= integer? map? neg? nil? string?
                             number? odd? pos? sequential? true? false? zero?])

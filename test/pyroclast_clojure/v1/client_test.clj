@@ -41,8 +41,3 @@
     (is (:success? poll-response))
     (is (= 6 (count (:records poll-response))))
     (is (:success? commit-response))))
-
-
-(comment (client/read-aggregates config)
-         (client/read-aggregate config "group-by-vals")
-         (client/read-aggregate-group config "aggregate-name" "group-name"))

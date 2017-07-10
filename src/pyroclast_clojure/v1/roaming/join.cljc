@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.join
+(ns pyroclast-clojure.v1.roaming.join
   (:require [pyroclast-clojure.util :as u]))
 
 (defn join-by-key-static [service dst join-key records]

@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.coerce
+(ns pyroclast-clojure.v1.roaming.coerce
   (:require [pyroclast-clojure.util :as u]))
 
 (defn parse-vals

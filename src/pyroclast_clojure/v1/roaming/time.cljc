@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.roaming.roaming.time
+(ns pyroclast-clojure.v1.roaming.time
   (:require [pyroclast-clojure.util :as u]))
 
 (defn parse-datetime
