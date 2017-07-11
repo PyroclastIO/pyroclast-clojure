@@ -19,7 +19,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/count "hourly-page-views" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -33,7 +33,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/min "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -47,7 +47,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/max "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -61,7 +61,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/sum "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -75,7 +75,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/average "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]
                      ["nation" "team"]))
         simulation (roaming/simulate! config service records)]
@@ -103,7 +103,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/sum "hourly-page-views" "points" (a/sliding-windows-of 1 "hour" 30 "minutes" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -121,7 +121,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/max "hourly-page-views" "points" (a/globally-windowed))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -132,7 +132,7 @@
   (let [config (:roaming (u/load-config "config.edn"))
         service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/count "hourly-page-views" (a/session-windows-of "nation" 1 "day" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)

@@ -110,9 +110,9 @@
       :sliding (into base (sliding-params "count" window))
       :session (into base (session-params "count" window)))))
 
-(defn aggregate-together
+(defn aggregations
   ([service aggregates]
-   (aggregate-together service aggregates nil))
+   (aggregations service aggregates nil))
   ([service aggregates group-by]
    (let [params (cond-> {:unformed.aggregation.multi/bundles aggregates}
                   group-by (assoc :unformed.aggregation.multi/group-by (u/mvec group-by)))]

@@ -54,7 +54,7 @@
                     (math/divide "value" 1.8)
                     (pseq/assoc-in ["unit"] "celsius")
                     (math/round-decimals "value" 2)
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/min "min-reading" "value" (a/globally-windowed))
                       (a/max "max-reading" "value" (a/globally-windowed))
                       (a/average "avg-reading" "value" (a/globally-windowed))]

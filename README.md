@@ -7,7 +7,7 @@ A Clojure library for sending events to a Pyroclast topic.
 With Leiningen:
 
 ```clojure
-[io.pyroclast/pyroclast-clojure "0.1.5"]
+[io.pyroclast/pyroclast-clojure "0.1.6"]
 ```
 
 ## Topic APIs
@@ -135,9 +135,9 @@ mirroring their behavior in a Pyroclast's distributed, production-grade cloud.
 To get started, pull the Roaming Docker container and start it up.
 
 ```console
-$ docker pull pyroclastio/roaming:0.1.2
+$ docker pull pyroclastio/roaming:0.1.3
 
-$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.2
+$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.3
 ```
 
 Wait a moment for the the uberjar to launch. When it's fully loaded, it'll echo it's configuration.
@@ -152,7 +152,7 @@ locally on port `9700`.
 After the initial code is set up, we define a service that reads events
 off an input topic. These events represent sentences. We'll split apart
 the sentences into their individual words, split those words into their
-own events, then clean them up by lowercasing them stripping out non
+own events, then clean them up by lowercasing them and stripping out non
 alpha-numeric characters. We'll stream the results to another topic for
 further processing. Finally, we add a test to ensure the service
 does what it's supposed to do.
@@ -200,7 +200,7 @@ does what it's supposed to do.
 #### Example: Streaming aggregations
 
 Now for something more advanced. Now let's suppose our records are being streamed
-from an IoT sensor emitting temperature readings and other data. Our goal first goal
+from an IoT sensor emitting temperature readings and other data. Our first goal
 is to convert the readings from fahrenheit to celsius, then clean up the digits
 and output the data elsewhere. Let's see what that looks like (comments inline).
 
@@ -285,7 +285,7 @@ on that later!
       (f/= "event-type" "reading")
       (c/parse-vals {"value" "double"})
       (f-to-c "value")
-      (a/aggregate-together
+      (a/aggregations
        [(a/min "min-reading" "value" (a/globally-windowed))
         (a/max "max-reading" "value" (a/globally-windowed))
         (a/average "avg-reading" "value" (a/globally-windowed))]
@@ -353,7 +353,7 @@ fixed windows over that value, counting the instances.
   (-> (s/new-service)
       (t/input-topic "page-views")
       (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
-      (a/aggregate-together
+      (a/aggregations
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))])))
 ```
 
@@ -381,7 +381,7 @@ still over 15 minute windows:
   (-> (s/new-service)
       (t/input-topic "page-views")
       (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
-      (a/aggregate-together
+      (a/aggregations
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))]
        ["country" "browser"])))
 ```
