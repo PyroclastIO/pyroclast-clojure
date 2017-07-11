@@ -3,12 +3,12 @@
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.coerce :as coerce]
             [pyroclast-clojure.v1.roaming.service :as s]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
+            [pyroclast-clojure.util :as u]))
 
-(def config {:endpoint "http://localhost:10557"})
-
-(deftest test-parse-vals
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-parse-vals
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (coerce/parse-vals {"x" "long"})
                     (t/output-topic "output"))

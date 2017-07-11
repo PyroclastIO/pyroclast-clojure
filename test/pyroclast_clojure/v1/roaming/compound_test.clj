@@ -8,12 +8,12 @@
             [pyroclast-clojure.v1.roaming.filters :as f]
             [pyroclast-clojure.v1.roaming.aggregations :as a]
             [pyroclast-clojure.v1.roaming.coerce :as c]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
+            [pyroclast-clojure.util :as u]))
 
-(def config {:endpoint "http://localhost:10557"})
-
-(deftest test-chained-functions
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-chained-functions
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (string/split-whitespace "sentence")
                     (pseq/explode "sentence" {:dst "word"})
@@ -44,8 +44,9 @@
    {"sensor-id" "1" "event-type" "ping"}
    {"sensor-id" "2" "event-type" "reading" "value" "50.01" "unit" "fahrenheit"}])
 
-(deftest temperature-sensors-by-id
-  (let [service (-> (s/new-service)
+(deftest ^:roaming temperature-sensors-by-id
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "sensor-events")
                     (f/= "event-type" "reading")
                     (c/parse-vals {"value" "double"})

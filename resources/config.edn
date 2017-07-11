@@ -1,0 +1,6 @@
+{:roaming {:endpoint "http://127.0.0.1:9700"}
+ :topic {:read-api-key ""
+         :write-api-key ""
+         :topic-id ""
+         :endpoint ""
+         :format :json}}
