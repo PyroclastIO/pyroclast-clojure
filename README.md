@@ -296,6 +296,7 @@ on the later!
 now for the test. each aggregate is available by name, and we'll see our sensor
 values bucketed by id.
 
+```clojure
 (deftest test-aggregated-temperature-reads-by-id
   (let [config (:roaming (u/load-config "config.edn"))
         simulation (roaming/simulate! config service temperature-records)
