@@ -135,9 +135,9 @@ mirroring their behavior in a Pyroclast's distributed, production-grade cloud.
 To get started, pull the Roaming Docker container and start it up.
 
 ```console
-$ docker pull pyroclastio/roaming:0.1.3
+$ docker pull pyroclastio/roaming:0.1.2
 
-$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.3
+$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.2
 ```
 
 Wait a moment for the the uberjar to launch. When it's fully loaded, it'll echo it's configuration.
