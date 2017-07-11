@@ -293,7 +293,7 @@ on the later!
 ```
 
 `agggregate-together` executes a collection of aggregates over a stream of events.
-now for the test. each aggregate is available by name, and we'll see our sensor
+now for the test. Each aggregate is available by name, and we'll see our sensor
 values bucketed by id.
 
 ```clojure
@@ -324,8 +324,8 @@ values bucketed by id.
 
 ### Example: time-windowed aggregations
 
-for our last example, we'll incorporate event time into our aggregations.
-here are some new records representing page views.
+For our last example, we'll incorporate event time into our aggregations.
+Here are some new records representing page views.
 
 ```clojure
 (def records
@@ -344,8 +344,8 @@ here are some new records representing page views.
    {"page" "/store" "browser" "chrome" "country" "can" "timestamp" "2017-07-10T15:24:08.000-00:00"}])
 ```
 
-to aggregate with event time, we'll need to parse our string timestamps into unix ms since the epoch.
-we use `parse-datetime` with the specified format to get that job done, then aggregate into 15 minute
+To aggregate with event time, we'll need to parse our string timestamps into Unix ms since the epoch.
+We use `parse-datetime` with the specified format to get that job done, then aggregate into 15 minute
 fixed windows over that value, counting the instances.
 
 ```clojure
@@ -357,7 +357,7 @@ fixed windows over that value, counting the instances.
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))])))
 ```
 
-executing a test reveals the aggregate slices into 15 minute windows with lower and upper timestamp
+Executing a test reveals the aggregate slices into 15 minute windows with lower and upper timestamp
 bounds, as well as the number of events that fell into the range.
 
 ```clojure
@@ -373,7 +373,7 @@ bounds, as well as the number of events that fell into the range.
            (get-in simulation [:result :aggregates "windowed-page-views"])))))
 ```
 
-a final variation on this example groups events by country, and again by browser,
+A final variation on this example groups events by country, and again by browser,
 still over 15 minute windows:
 
 ```clojure
@@ -386,7 +386,7 @@ still over 15 minute windows:
        ["country" "browser"])))
 ```
 
-pyroclast automatically sub-groups based on each specified category: country, and then browser.
+Pyroclast automatically sub-groups based on each specified category: country, and then browser.
 
 ```clojure
 (deftest test-page-views-over-grouped-windows
