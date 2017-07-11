@@ -405,3 +405,11 @@ Pyroclast automatically sub-groups based on each specified category: country, an
                              {"bounds" {"lower" 1499699700000 "upper" 1499700599999} "value" 1}]}}
            (get-in simulation [:result :aggregates "windowed-page-views"])))))
 ```
+
+### Show me more!
+
+The tests are a great guide of how to use every function. Run the suite with:
+
+```clojure
+lein test :roaming
+```
