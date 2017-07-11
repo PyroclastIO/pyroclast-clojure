@@ -276,7 +276,7 @@ We've verified that our unit conversion works. Let's try aggregating those readi
 In this next portion, we replace the output topic with an aggregation. Here, we take
 the minimum, maximum, and average of all readings, grouped by sensor ID. A global window
 indicates that we are interested in all events, regardless of when they happened. More
-on the later!
+on that later!
 
 ```clojure
 (def service
