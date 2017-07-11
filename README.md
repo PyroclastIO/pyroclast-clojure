@@ -169,8 +169,7 @@ does what it's supposed to do.
             [pyroclast-clojure.v1.roaming.filters :as f]
             [pyroclast-clojure.v1.roaming.aggregations :as a]
             [pyroclast-clojure.v1.roaming.coerce :as c]
-            [pyroclast-clojure.v1.roaming.topic :as t]
-            [pyroclast-clojure.util :as u]))
+            [pyroclast-clojure.v1.roaming.topic :as t]))
 
 (def config {:endpoint "http://127.0.0.1:9700"})
 
@@ -298,8 +297,7 @@ values bucketed by id.
 
 ```clojure
 (deftest test-aggregated-temperature-reads-by-id
-  (let [config (:roaming (u/load-config "config.edn"))
-        simulation (roaming/simulate! config service temperature-records)
+  (let [simulation (roaming/simulate! config service temperature-records)
 
         min-reading (get-in simulation [:result :aggregates "min-reading"])
         max-reading (get-in simulation [:result :aggregates "max-reading"])
