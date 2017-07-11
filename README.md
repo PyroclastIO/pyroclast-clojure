@@ -130,17 +130,32 @@ engine and APIs into a Docker container. Using this SDK, Clojure can connect
 to Roaming and execute streaming programs in a fast, deterministic environment,
 mirroring their behavior in a Pyroclast's distributed, production-grade cloud.
 
-### The Docker Container
+### Pull the Docker Container
+
+To get started, pull the Roaming Docker container and start it up.
 
 ```console
-$ docker pull pyroclastio/roaming:0.1.1
+$ docker pull pyroclastio/roaming:0.1.2
 
-$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.1
+$ docker run -it -p 9700:9700 pyroclastio/roaming:0.1.2
 ```
 
-Wait a moment for the the uberjar to launch.
+Wait a moment for the the uberjar to launch. When it's fully loaded, it'll echo it's configuration.
 
 ### Example: streaming ETL
+
+For our first example, we'll work through a simple streaming ETL problem. We begin by importing
+all the Roaming namespaces with functions we might use. Next, we define a configuration
+endpoint. The only key that's needed is the endpoint to Roaming, which for Docker, we started
+locally on port `9700`.
+
+After the initial code is set up, we define a service that reads events
+off an input topic. These events represent sentences. We'll split apart
+the sentences into their individual words, split those words into their
+own events, then clean them up by lowercasing them stripping out non
+alpha-numeric characters. We'll stream the results to another topic for
+further processing. Finally, we add a test to ensure the service
+does what it's supposed to do.
 
 ```clojure
 (ns my.project
@@ -185,6 +200,11 @@ Wait a moment for the the uberjar to launch.
 
 #### Example: Streaming aggregations
 
+Now for something more advanced. Now let's suppose our records are being streamed
+from an IoT sensor emitting temperature readings and other data. Our goal first goal
+is to convert the readings from fahrenheit to celsius, then clean up the digits
+and output the data elsewhere. Let's see what that looks like (comments inline).
+
 ```clojure
 (def temperature-records
   [{"sensor-id" "1" "event-type" "reading" "value" "50.24" "unit" "fahrenheit"}
@@ -201,14 +221,16 @@ Wait a moment for the the uberjar to launch.
 ```clojure
 (def service (-> (s/new-service)
                  (t/input-topic "sensor-events")
-                 (f/= "event-type" "reading")
-                 (c/parse-vals {"value" "double"})
-                 (math/minus "value" 32)
+                 (f/= "event-type" "reading")       ;; Only interested in tempterature readings.
+                 (c/parse-vals {"value" "double"})  ;; Parse strings into doubles.
+                 (math/minus "value" 32)            ;; Fahrenheit to celsius math.
                  (math/divide "value" 1.8)
-                 (pseq/assoc-in ["unit"] "celsius")
-                 (math/round-decimals "value" 2)
+                 (pseq/assoc-in ["unit"] "celsius") ;; Update the event to reflect the new unit.
+                 (math/round-decimals "value" 2)    ;; Tidy up our decimals.
                  (t/output-topic "as-celsius")))
 ```
+
+Pretty intuitive. Let's write a test.
 
 ```clojure
 (deftest test-streaming-temperature-sensor-readings
@@ -224,6 +246,10 @@ Wait a moment for the the uberjar to launch.
            (get-in simulation [:result :output-records])))))
 ```
 
+Celsius rounded to two digits. Excellent. Let's be idiomatic and extract the unit
+conversion piece of our service into its own function. Since it's just data under the
+hood, this is easy.
+
 ```clojure
 (defn f-to-c [service k]
   (-> service
@@ -235,14 +261,23 @@ Wait a moment for the the uberjar to launch.
                  (t/input-topic "sensor-events")
                  (f/= "event-type" "reading")
                  (c/parse-vals {"value" "double"})
-                 (f-to-c "value")
+                 (f-to-c "value")                   ;; Replaces inline math.
                  (math/round-decimals "value" 2)
                  (t/output-topic "as-celsius")))
 ```
 
+Looks good, we've factored out the cohesive part of the service. If we test again,
+we can see the service behaves the same.
+
 ```clojure
 (test-streaming-temperature-sensor-readings)
 ```
+
+We've verified that our unit conversion works. Let's try aggregating those readings next.
+In this next portion, we replace the output topic with an aggregation. Here, we take
+the minimum, maximum, and average of all readings, grouped by sensor ID. A global window
+indicates that we are interested in all events, regardless of when they happened. More
+on the later!
 
 ```clojure
 (def service (-> (s/new-service)
@@ -255,6 +290,11 @@ Wait a moment for the the uberjar to launch.
                    (a/max "max-reading" "value" (a/globally-windowed))
                    (a/average "avg-reading" "value" (a/globally-windowed))]
                   "sensor-id")))
+```
+
+`agggregate-together` executes a collection of aggregates over a stream of events.
+now for the test. each aggregate is available by name, and we'll see our sensor
+values bucketed by id.
 
 (deftest test-aggregated-temperature-reads-by-id
   (let [config (:roaming (u/load-config "config.edn"))
@@ -282,33 +322,45 @@ Wait a moment for the the uberjar to launch.
            avg-reading))))
 ```
 
-#### Example: Time-windowed aggregations
+#### example: time-windowed aggregations
+
+for our last example, we'll incorporate event time into our aggregations.
+here are some new records representing page views.
 
 ```clojure
 (def records
-  [{"page" "/console" "browser" "Chrome" "country" "USA" "timestamp" "2017-07-11T16:37:08.000-00:00"}
-   {"page" "/console" "browser" "Chrome" "country" "BR" "timestamp" "2017-07-11T16:34:02.000-00:00"}
-   {"page" "/store" "browser" "Chrome" "country" "USA" "timestamp" "2017-07-11T16:48:15.000-00:00"}
-   {"page" "/console" "browser" "Firefox" "country" "USA" "timestamp" "2017-07-11T16:01:53.000-00:00"}
-   {"page" "/store" "browser" "Chrome" "country" "BR" "timestamp" "2017-07-11T16:05:35.000-00:00"}
-   {"page" "/console" "browser" "Chrome" "country" "USA" "timestamp" "2017-07-11T15:20:08.000-00:00"}
-   {"page" "/about" "browser" "Chrome" "country" "CAN" "timestamp" "2017-07-11T16:21:01.000-00:00"}
-   {"page" "/console" "browser" "Firefox" "country" "USA" "timestamp" "2017-07-11T16:42:15.000-00:00"}
-   {"page" "/console" "browser" "Chrome" "country" "USA" "timestamp" "2017-07-11T16:24:59.000-00:00"}
-   {"page" "/about" "browser" "Chrome" "country" "USA" "timestamp" "2017-07-11T16:37:08.000-00:00"}
-   {"page" "/console" "browser" "Firefox" "country" "BR" "timestamp" "2017-07-11T16:33:14.000-00:00"}
-   {"page" "/console" "browser" "Firefox" "country" "USA" "timestamp" "2017-07-11T16:37:03.000-00:00"}
-   {"page" "/store" "browser" "Chrome" "country" "CAN" "timestamp" "2017-07-10T15:24:08.000-00:00"}])
+  [{"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:37:08.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "br" "timestamp" "2017-07-11t16:34:02.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:48:15.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:01:53.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "br" "timestamp" "2017-07-11t16:05:35.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t15:20:08.000-00:00"}
+   {"page" "/about" "browser" "chrome" "country" "can" "timestamp" "2017-07-11t16:21:01.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:42:15.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:24:59.000-00:00"}
+   {"page" "/about" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:37:08.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "br" "timestamp" "2017-07-11t16:33:14.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:37:03.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "can" "timestamp" "2017-07-10t15:24:08.000-00:00"}])
 ```
+
+to aggregate with event time, we'll need to parse our string timestamps into unix ms since the epoch.
+we use `parse-datetime` with the specified format to get that job done, then aggregate into 15 minute
+fixed windows over that value, counting the instances.
 
 ```clojure
 (def service
   (-> (s/new-service)
       (t/input-topic "page-views")
-      (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
+      (time/parse-datetime "timestamp" "yyyy-mm-dd't'hh:mm:ss.sssz" {:dst "parsed-time"})
       (a/aggregate-together
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))])))
+```
 
+executing a test reveals the aggregate slices into 15 minute windows with lower and upper timestamp
+bounds, as well as the number of events that fell into the range.
+
+```clojure
 (deftest test-page-views-over-fixed-windows
   (let [simulation (roaming/simulate! config service records)]
     (is (:success? simulation))
@@ -321,15 +373,22 @@ Wait a moment for the the uberjar to launch.
            (get-in simulation [:result :aggregates "windowed-page-views"])))))
 ```
 
+a final variation on this example groups events by country, and again by browser,
+still over 15 minute windows:
+
 ```clojure
 (def service
   (-> (s/new-service)
       (t/input-topic "page-views")
-      (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
+      (time/parse-datetime "timestamp" "yyyy-mm-dd't'hh:mm:ss.sssz" {:dst "parsed-time"})
       (a/aggregate-together
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))]
        ["country" "browser"])))
+```
 
+pyroclast automatically sub-groups based on each specified category: country, and then browser.
+
+```clojure
 (deftest test-page-views-over-grouped-windows
   (let [simulation (roaming/simulate! config service records)]
     (is (:success? simulation))
