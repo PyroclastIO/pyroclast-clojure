@@ -185,7 +185,7 @@ does what it's supposed to do.
 
 (deftest test-word-splitting
   (let [simulation (roaming/simulate! config service records)]
-    (is (:success? simulation) simulation)
+    (is (:success? simulation))
     (is (= [{"word" "pyroclast"}
             {"word" "roaming"}
             {"word" "is"}
@@ -234,7 +234,7 @@ Pretty intuitive. Let's write a test.
 ```clojure
 (deftest test-streaming-temperature-sensor-readings
   (let [simulation (roaming/simulate! config service temperature-records)]
-    (is (:success? simulation) simulation)
+    (is (:success? simulation))
     (is (= [{"sensor-id" "1" "event-type" "reading" "value" 10.13 "unit" "celsius"}
             {"sensor-id" "2" "event-type" "reading" "value" 9.09 "unit" "celsius"}
             {"sensor-id" "3" "event-type" "reading" "value" 11.66 "unit" "celsius"}
@@ -279,16 +279,17 @@ indicates that we are interested in all events, regardless of when they happened
 on the later!
 
 ```clojure
-(def service (-> (s/new-service)
-                 (t/input-topic "sensor-events")
-                 (f/= "event-type" "reading")
-                 (c/parse-vals {"value" "double"})
-                 (f-to-c "value")
-                 (a/aggregate-together
-                  [(a/min "min-reading" "value" (a/globally-windowed))
-                   (a/max "max-reading" "value" (a/globally-windowed))
-                   (a/average "avg-reading" "value" (a/globally-windowed))]
-                  "sensor-id")))
+(def service
+  (-> (s/new-service)
+      (t/input-topic "sensor-events")
+      (f/= "event-type" "reading")
+      (c/parse-vals {"value" "double"})
+      (f-to-c "value")
+      (a/aggregate-together
+       [(a/min "min-reading" "value" (a/globally-windowed))
+        (a/max "max-reading" "value" (a/globally-windowed))
+        (a/average "avg-reading" "value" (a/globally-windowed))]
+       "sensor-id")))
 ```
 
 `agggregate-together` executes a collection of aggregates over a stream of events.
@@ -303,7 +304,7 @@ values bucketed by id.
         max-reading (get-in simulation [:result :aggregates "max-reading"])
         avg-reading (get-in simulation [:result :aggregates "avg-reading"])]
 
-    (is (:success? simulation) simulation)
+    (is (:success? simulation))
 
     (is (= {"1" {"value" 9.738888888888889}
             "2" {"value" 9.094444444444443}
@@ -321,26 +322,26 @@ values bucketed by id.
            avg-reading))))
 ```
 
-#### example: time-windowed aggregations
+### Example: time-windowed aggregations
 
 for our last example, we'll incorporate event time into our aggregations.
 here are some new records representing page views.
 
 ```clojure
 (def records
-  [{"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:37:08.000-00:00"}
-   {"page" "/console" "browser" "chrome" "country" "br" "timestamp" "2017-07-11t16:34:02.000-00:00"}
-   {"page" "/store" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:48:15.000-00:00"}
-   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:01:53.000-00:00"}
-   {"page" "/store" "browser" "chrome" "country" "br" "timestamp" "2017-07-11t16:05:35.000-00:00"}
-   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t15:20:08.000-00:00"}
-   {"page" "/about" "browser" "chrome" "country" "can" "timestamp" "2017-07-11t16:21:01.000-00:00"}
-   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:42:15.000-00:00"}
-   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:24:59.000-00:00"}
-   {"page" "/about" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11t16:37:08.000-00:00"}
-   {"page" "/console" "browser" "firefox" "country" "br" "timestamp" "2017-07-11t16:33:14.000-00:00"}
-   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11t16:37:03.000-00:00"}
-   {"page" "/store" "browser" "chrome" "country" "can" "timestamp" "2017-07-10t15:24:08.000-00:00"}])
+  [{"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11T16:37:08.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "br" "timestamp" "2017-07-11T16:34:02.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11T16:48:15.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11T16:01:53.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "br" "timestamp" "2017-07-11T16:05:35.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11T15:20:08.000-00:00"}
+   {"page" "/about" "browser" "chrome" "country" "can" "timestamp" "2017-07-11T16:21:01.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11T16:42:15.000-00:00"}
+   {"page" "/console" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11T16:24:59.000-00:00"}
+   {"page" "/about" "browser" "chrome" "country" "usa" "timestamp" "2017-07-11T16:37:08.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "br" "timestamp" "2017-07-11T16:33:14.000-00:00"}
+   {"page" "/console" "browser" "firefox" "country" "usa" "timestamp" "2017-07-11T16:37:03.000-00:00"}
+   {"page" "/store" "browser" "chrome" "country" "can" "timestamp" "2017-07-10T15:24:08.000-00:00"}])
 ```
 
 to aggregate with event time, we'll need to parse our string timestamps into unix ms since the epoch.
@@ -351,7 +352,7 @@ fixed windows over that value, counting the instances.
 (def service
   (-> (s/new-service)
       (t/input-topic "page-views")
-      (time/parse-datetime "timestamp" "yyyy-mm-dd't'hh:mm:ss.sssz" {:dst "parsed-time"})
+      (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
       (a/aggregate-together
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))])))
 ```
@@ -379,7 +380,7 @@ still over 15 minute windows:
 (def service
   (-> (s/new-service)
       (t/input-topic "page-views")
-      (time/parse-datetime "timestamp" "yyyy-mm-dd't'hh:mm:ss.sssz" {:dst "parsed-time"})
+      (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss.SSSZ" {:dst "parsed-time"})
       (a/aggregate-together
        [(a/count "windowed-page-views" (a/fixed-windows-of 15 "minutes" "parsed-time"))]
        ["country" "browser"])))
