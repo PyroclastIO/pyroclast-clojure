@@ -392,16 +392,16 @@ pyroclast automatically sub-groups based on each specified category: country, an
 (deftest test-page-views-over-grouped-windows
   (let [simulation (roaming/simulate! config service records)]
     (is (:success? simulation))
-    (is (= {"USA" {"Chrome" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 2}
+    (is (= {"usa" {"chrome" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 2}
                              {"bounds" {"lower" 1499791500000 "upper" 1499792399999} "value" 1}
                              {"bounds" {"lower" 1499786100000 "upper" 1499786999999} "value" 1}
                              {"bounds" {"lower" 1499789700000 "upper" 1499790599999} "value" 1}]
-                   "Firefox" [{"bounds" {"lower" 1499788800000 "upper" 1499789699999} "value" 1}
+                   "firefox" [{"bounds" {"lower" 1499788800000 "upper" 1499789699999} "value" 1}
                               {"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 2}]}
-            "BR" {"Chrome" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 1}
+            "br" {"chrome" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 1}
                             {"bounds" {"lower" 1499788800000 "upper" 1499789699999} "value" 1}]
-                  "Firefox" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 1}]}
-            "CAN" {"Chrome" [{"bounds" {"lower" 1499789700000 "upper" 1499790599999} "value" 1}
+                  "firefox" [{"bounds" {"lower" 1499790600000 "upper" 1499791499999} "value" 1}]}
+            "can" {"chrome" [{"bounds" {"lower" 1499789700000 "upper" 1499790599999} "value" 1}
                              {"bounds" {"lower" 1499699700000 "upper" 1499700599999} "value" 1}]}}
            (get-in simulation [:result :aggregates "windowed-page-views"])))))
 ```
