@@ -35,23 +35,24 @@
       (is (= 6 (count (:records poll-response))))
       (is (:success? commit-response)))))
 
-; (deftest producer-tests
-;   (time 
-;    (dotimes [r 5000]
-;      (run! deref (pmap (fn [i] 
-;                          (let [ret2 (promise)] 
-;                            (client/send-events-async!
-;                             config 
-;                             (fn [results] (deliver ret2 results))
-;                             [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-;                              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}])
-;                            ret2))
-;                        (range 50))))))
+(deftest ^:performance producer-tests
+  (time 
+   (let [config (:topic (u/load-config "config.edn"))] 
+     (dotimes [r 50]
+       (run! deref (pmap (fn [i] 
+                           (let [ret2 (promise)] 
+                             (client/send-events-async!
+                              config 
+                              (fn [results] (deliver ret2 results))
+                              [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}])
+                             ret2))
+                         (range 50)))))))

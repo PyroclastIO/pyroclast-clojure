@@ -21,5 +21,6 @@
            :task/bundle-version version
            :params (remove-nil-map-vals params-map)}))
 
-(defn load-config [file-path]
-  (read-string (slurp (clojure.java.io/resource file-path))))
+#?(:clj 
+   (defn load-config [file-path]
+     (read-string (slurp (clojure.java.io/resource file-path)))))
