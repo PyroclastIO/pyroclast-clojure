@@ -35,12 +35,16 @@ particular topic partitions, and can be accessed for other purposes.
 (client/send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}})
 ```
 
+Response: `{:created true}`
+
 #### Send a batch of events synchronously
 
 ```clojure
 (client/send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
                              {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}])
 ```
+
+Response: `{:created true}`
 
 #### Send one event asynchronously
 

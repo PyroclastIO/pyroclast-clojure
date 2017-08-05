@@ -5,7 +5,7 @@
             [pyroclast-clojure.v1.roaming.service :as s]
             [pyroclast-clojure.v1.roaming.topic :as t]))
 
-(def config {:endpoint "http://localhost:10557"})
+(def config {:endpoint "http://localhost:10556"})
 
 (def records
   [{"timestamp" 1499465513000 "nation" "usa" "team" "red" "points" 20}
