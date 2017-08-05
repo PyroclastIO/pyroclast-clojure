@@ -3,12 +3,12 @@
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.filters :as f]
             [pyroclast-clojure.v1.roaming.service :as s]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
+            [pyroclast-clojure.util :as u]))
 
-(def config {:endpoint "http://localhost:10557"})
-
-(deftest test-coll?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-coll?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/coll? "target")
                     (t/output-topic "output"))
@@ -17,8 +17,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-distinct?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-distinct?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/distinct? "target")
                     (t/output-topic "output"))
@@ -27,8 +28,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-empty?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-empty?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/empty? "target")
                     (t/output-topic "output"))
@@ -37,8 +39,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-even?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-even?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/even? "target")
                     (t/output-topic "output"))
@@ -47,8 +50,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-odd?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-odd?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/odd? "target")
                     (t/output-topic "output"))
@@ -57,8 +61,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-=
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-=
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/= "target" 50)
                     (t/output-topic "output"))
@@ -67,8 +72,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-not=
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-not=
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/not= "target" 50)
                     (t/output-topic "output"))
@@ -77,8 +83,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-<
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-<
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/< "target" 50)
                     (t/output-topic "output"))
@@ -87,8 +94,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-<=
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-<=
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/<= "target" 50)
                     (t/output-topic "output"))
@@ -97,8 +105,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test->
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test->
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/> "target" 45)
                     (t/output-topic "output"))
@@ -107,8 +116,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test->=
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test->=
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/>= "target" 50)
                     (t/output-topic "output"))
@@ -117,8 +127,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-pos?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-pos?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/pos? "target")
                     (t/output-topic "output"))
@@ -127,8 +138,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-neg?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-neg?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/neg? "target")
                     (t/output-topic "output"))
@@ -137,8 +149,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-integer?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-integer?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/integer? "target")
                     (t/output-topic "output"))
@@ -147,8 +160,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-map?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-map?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/map? "target")
                     (t/output-topic "output"))
@@ -157,8 +171,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-nil?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-nil?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/nil? "target")
                     (t/output-topic "output"))
@@ -167,8 +182,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-number?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-number?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/number? "target")
                     (t/output-topic "output"))
@@ -177,8 +193,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-sequential?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-sequential?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/sequential? "target")
                     (t/output-topic "output"))
@@ -187,8 +204,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-true?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-true?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/true? "target")
                     (t/output-topic "output"))
@@ -197,8 +215,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-false?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-false?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/false? "target")
                     (t/output-topic "output"))
@@ -207,8 +226,9 @@
     (is (:success? simulation) simulation)
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-zero?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-zero?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/zero? "target")
                     (t/output-topic "output"))
@@ -217,8 +237,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-in?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-in?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/in? "target" 2)
                     (t/output-topic "output"))
@@ -227,8 +248,9 @@
     (is (:success? simulation) simulation)
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-string-blank?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-string-blank?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/string-blank? "target")
                     (t/output-topic "output"))
@@ -237,8 +259,9 @@
     (is (:success? simulation) simulation)
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-string-starts-with?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-string-starts-with?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/string-starts-with? "target" "pri")
                     (t/output-topic "output"))
@@ -247,8 +270,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-string-ends-with?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-string-ends-with?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/string-ends-with? "target" "est")
                     (t/output-topic "output"))
@@ -257,8 +281,9 @@
     (is (:success? simulation))
     (is (= records (get-in simulation [:result :output-records])))))
 
-(deftest test-string-includes?
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-string-includes?
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (f/string-includes? "target" "ea")
                     (t/output-topic "output"))

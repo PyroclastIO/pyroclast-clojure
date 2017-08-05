@@ -3,12 +3,12 @@
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.join :as j]
             [pyroclast-clojure.v1.roaming.service :as s]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
+            [pyroclast-clojure.util :as u]))
 
-(def config {:endpoint "http://localhost:10557"})
-
-(deftest test-join-by-key-static
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-join-by-key-static
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (j/join-by-key-static "joined" "id" [{"id" 1 "name" "Pyroclast"}
                                                          {"id" 2 "name" "Onyx"}])

@@ -3,12 +3,12 @@
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.time :as time]
             [pyroclast-clojure.v1.roaming.service :as s]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
+            [pyroclast-clojure.util :as u]))
 
-(def config {:endpoint "http://localhost:10557"})
-
-(deftest test-parse-datetime
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-parse-datetime
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (time/parse-datetime "timestamp" "YYYY-MM-dd'T'HH:mm:ss")
                     (t/output-topic "output"))
@@ -18,8 +18,9 @@
     (is (= [{"timestamp" 1499324582000}]
            (get-in simulation [:result :output-records])))))
 
-(deftest test-format-unix-ms-timestamp
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-format-unix-ms-timestamp
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "input")
                     (time/format-unix-ms-timestamp "timestamp" "YYYY-MM-dd'T'HH:mm:ss")
                     (t/output-topic "output"))

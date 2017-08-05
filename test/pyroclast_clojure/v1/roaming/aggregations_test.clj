@@ -4,8 +4,7 @@
             [pyroclast-clojure.v1.roaming.aggregations :as a]
             [pyroclast-clojure.v1.roaming.service :as s]
             [pyroclast-clojure.v1.roaming.topic :as t]))
-
-(def config {:endpoint "http://localhost:10556"})
+            [pyroclast-clojure.util :as u]))
 
 (def records
   [{"timestamp" 1499465513000 "nation" "usa" "team" "red" "points" 20}
@@ -16,10 +15,11 @@
    {"timestamp" 1499463213000 "nation" "canada" "team" "orange" "points" 50}
    {"timestamp" 1499325313000 "nation" "canada" "team" "orange" "points" 7}])
 
-(deftest test-count
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-count
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/count "hourly-page-views" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -29,10 +29,11 @@
             {"bounds" {"lower" 1499324400000 "upper" 1499327999999} "value" 1}]
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-min
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-min
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/min "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -42,10 +43,11 @@
             {"bounds" {"lower" 1499324400000 "upper" 1499327999999} "value" 7}]
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-max
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-max
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/max "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -55,10 +57,11 @@
             {"bounds" {"lower" 1499324400000 "upper" 1499327999999} "value" 7}]
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-sum
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-sum
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/sum "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -68,10 +71,11 @@
             {"bounds" {"lower" 1499324400000 "upper" 1499327999999} "value" 7}]
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-grouped-average
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-grouped-average
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/average "hourly-page-views" "points" (a/fixed-windows-of 1 "hour" "timestamp"))]
                      ["nation" "team"]))
         simulation (roaming/simulate! config service records)]
@@ -95,10 +99,11 @@
              [{"bounds" {"lower" 1499443200000 "upper" 1499446799999} "value" 20}]}}
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-sum-sliding-windows
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-sum-sliding-windows
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/sum "hourly-page-views" "points" (a/sliding-windows-of 1 "hour" 30 "minutes" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
@@ -112,20 +117,22 @@
             {"bounds" {"lower" 1499324400000 "upper" 1499327999999} "value" 7}]
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-max-global-windows
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-max-global-windows
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/max "hourly-page-views" "points" (a/globally-windowed))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
     (is (= {"value" 50}
            (get-in simulation [:result :aggregates "hourly-page-views"])))))
 
-(deftest test-count-session-windows
-  (let [service (-> (s/new-service)
+(deftest ^:roaming test-count-session-windows
+  (let [config (:roaming (u/load-config "config.edn"))
+        service (-> (s/new-service)
                     (t/input-topic "events")
-                    (a/aggregate-together
+                    (a/aggregations
                      [(a/count "hourly-page-views" (a/session-windows-of "nation" 1 "day" "timestamp"))]))
         simulation (roaming/simulate! config service records)]
     (is (:success? simulation) simulation)
