@@ -1,7 +1,10 @@
 (ns pyroclast-clojure.v1.roaming.client
   (:require [clojure.walk :as w]
+            [clojure.set :refer [rename-keys]]
             [clj-http.client :as client]
-            [cheshire.core :refer [generate-string parse-string]]))
+            [cheshire.core :refer [generate-string parse-string]]
+            [pyroclast-clojure.v1.roaming.translation :as t]
+            [yaml.core :as yaml]))
 
 (defn process-simulation-response [{:keys [status body] :as response}]
   (cond (= status 200)
@@ -15,6 +18,13 @@
 
         :else
         {:success? false :reason "Encountered an internal error." :response response}))
+
+(defn deyamlize [service]
+  {:roaming.service/tasks
+   (map
+    (fn [task]
+      (t/canonicalize task))
+    (:tasks service))})
 
 (defn simulate! [{:keys [endpoint] :as config} service records]
   (let [response
