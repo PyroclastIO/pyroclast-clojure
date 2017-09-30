@@ -1102,7 +1102,7 @@
 (defmethod canonicalize-aggregation "count"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/count
-              :unformed.aggregation/window-type (:windowType aggregation)
+              :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
@@ -1114,7 +1114,7 @@
 (defmethod canonicalize-aggregation "sum"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/sum
-              :unformed.aggregation/window-type (:windowType aggregation)
+              :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
@@ -1126,7 +1126,7 @@
 (defmethod canonicalize-aggregation "min"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/min
-              :unformed.aggregation/window-type (:windowType aggregation)
+              :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
@@ -1138,7 +1138,7 @@
 (defmethod canonicalize-aggregation "max"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/max
-              :unformed.aggregation/window-type (:windowType aggregation)
+              :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
@@ -1150,7 +1150,7 @@
 (defmethod canonicalize-aggregation "average"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/average
-              :unformed.aggregation/window-type (:windowType aggregation)
+              :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
@@ -1166,7 +1166,7 @@
    :params
    (cond-> {}
      true
-     (assoc :unformed.aggregation.multi/bundles (map canonicalize-aggregation aggregations))
+     (assoc :unformed.aggregation.multi/bundles (mapv canonicalize-aggregation aggregations))
 
      (:groupBy params)
-     (assoc :unformed.aggregation.multi/group-by (:groupBy params)))})
+     (assoc :aggregation.multi/group-by (:groupBy params)))})
