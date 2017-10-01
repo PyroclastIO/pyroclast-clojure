@@ -1082,30 +1082,30 @@
   (keyword (str "unformed.aggregation." f) (name kw)))
 
 (defn fixed-params [f aggregation]
-  {(agg-specific f :window-key) (:timestampKey aggregation)
-   (unformed-specific f :range-duration) (:rangeDuration aggregation)
-   (unformed-specific f :range-units) (:rangeUnits aggregation)})
+  {(agg-specific f :window-key) (get-in aggregation [:params :timestampKey])
+   (unformed-specific f :range-duration) (get-in aggregation [:params :rangeDuration])
+   (unformed-specific f :range-units) (get-in aggregation [:params :rangeUnits])})
 
 (defn- sliding-params [f aggregation]
-  {(agg-specific f :window-key) (:timestampKey aggregation)
-   (unformed-specific f :range-duration) (:rangeDuration aggregation)
-   (unformed-specific f :range-units) (:rangeUnits aggregation)
-   (unformed-specific f :slide-duration) (:slideDuration aggregation)
-   (unformed-specific f :slide-units) (:slideUnits aggregation)})
+  {(agg-specific f :window-key) (get-in aggregation [:params :timestampKey])
+   (unformed-specific f :range-duration) (get-in aggregation [:params :rangeDuration])
+   (unformed-specific f :range-units) (get-in aggregation [:params :rangeUnits])
+   (unformed-specific f :slide-duration) (get-in aggregation [:params :slideDuration])
+   (unformed-specific f :slide-units) (get-in aggregation [:params :slideUnits])})
 
 (defn- session-params [f aggregation]
-  {(agg-specific f :window-key) (:timestampKey aggregation)
-   (agg-specific f :session-key) (:sessionKey aggregation)
-   (unformed-specific f :timeout-gap-duration) (:timeoutGapDuration aggregation)
-   (unformed-specific f :timeout-gap-units) (:timeoutGapUnits aggregation)})
+  {(agg-specific f :window-key) (get-in aggregation [:params :timestampKey])
+   (agg-specific f :session-key) (get-in aggregation [:params :sessionKey])
+   (unformed-specific f :timeout-gap-duration) (get-in aggregation [:params :timeoutGapDuration])
+   (unformed-specific f :timeout-gap-units) (get-in aggregation [:params :timeoutGapUnits])})
 
 (defmethod canonicalize-aggregation "count"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/count
-              :unformed.aggregation/window-type (keyword (:windowType aggregation))
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
               :unformed.aggregation/window-id (u/make-random-uuid)
               :aggregation/window-name (:name aggregation)}]
-    (case (:windowType aggregation)
+    (case (get-in aggregation [:params :windowType])
       "global" base
       "fixed" (into base (fixed-params "count" aggregation))
       "sliding" (into base (sliding-params "count" aggregation))
@@ -1114,11 +1114,11 @@
 (defmethod canonicalize-aggregation "sum"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/sum
-              :unformed.aggregation/window-type (keyword (:windowType aggregation))
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
               :unformed.aggregation/window-id (u/make-random-uuid)
-              :aggregation.sum/field (:field aggregation)
+              :aggregation.sum/field (get-in aggregation [:params :field])
               :aggregation/window-name (:name aggregation)}]
-    (case (:windowType aggregation)
+    (case (get-in aggregation [:params :windowType])
       "global" base
       "fixed" (into base (fixed-params "sum" aggregation))
       "sliding" (into base (sliding-params "sum" aggregation))
@@ -1127,11 +1127,11 @@
 (defmethod canonicalize-aggregation "min"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/min
-              :unformed.aggregation/window-type (keyword (:windowType aggregation))
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
               :unformed.aggregation/window-id (u/make-random-uuid)
-              :aggregation.min/field (:field aggregation)
+              :aggregation.min/field (get-in aggregation [:params :field])
               :aggregation/window-name (:name aggregation)}]
-    (case (:windowType aggregation)
+    (case (get-in aggregation [:params :windowType])
       "global" base
       "fixed" (into base (fixed-params "min" aggregation))
       "sliding" (into base (sliding-params "min" aggregation))
@@ -1140,11 +1140,11 @@
 (defmethod canonicalize-aggregation "max"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/max
-              :unformed.aggregation/window-type (keyword (:windowType aggregation))
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
               :unformed.aggregation/window-id (u/make-random-uuid)
-              :aggregation.max/field (:field aggregation)
+              :aggregation.max/field (get-in aggregation [:params :field])
               :aggregation/window-name (:name aggregation)}]
-    (case (:windowType aggregation)
+    (case (get-in aggregation [:params :windowType])
       "global" base
       "fixed" (into base (fixed-params "max" aggregation))
       "sliding" (into base (sliding-params "max" aggregation))
@@ -1153,15 +1153,30 @@
 (defmethod canonicalize-aggregation "average"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/average
-              :unformed.aggregation/window-type (keyword (:windowType aggregation))
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
               :unformed.aggregation/window-id (u/make-random-uuid)
-              :aggregation.average/field (:field aggregation)
+              :aggregation.average/field (get-in aggregation [:params :field])
               :aggregation/window-name (:name aggregation)}]
-    (case (:windowType aggregation)
+    (case (get-in aggregation [:params :windowType])
       "global" base
       "fixed" (into base (fixed-params "average" aggregation))
       "sliding" (into base (sliding-params "average" aggregation))
       "session" (into base (session-params "average" aggregation)))))
+
+(defmethod canonicalize-aggregation "customAggregation"
+  [aggregation]
+  (let [base {:unformed.task-params/name :aggregation/javascript
+              :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
+              :unformed.aggregation/window-id (u/make-random-uuid)
+              :aggregation.javascript/code (get-in aggregation [:params :code])
+              :aggregation.javascript/initialize-function (get-in aggregation [:params :initializeFunction])
+              :aggregation.javascript/update-function (get-in aggregation [:params :updateFunction])
+              :aggregation/window-name (:name aggregation)}]
+    (case (get-in aggregation [:params :windowType])
+      "global" base
+      "fixed" (into base (fixed-params "javascript" aggregation))
+      "sliding" (into base (sliding-params "javascript" aggregation))
+      "session" (into base (session-params "javascript" aggregation)))))
 
 (defmethod canonicalize "materializeView"
   [{:keys [params aggregations] :as task}]
