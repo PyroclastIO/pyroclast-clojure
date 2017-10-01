@@ -1116,6 +1116,7 @@
   (let [base {:unformed.task-params/name :aggregation/sum
               :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
+              :aggregation.sum/field (:field aggregation)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
       "global" base
@@ -1128,6 +1129,7 @@
   (let [base {:unformed.task-params/name :aggregation/min
               :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
+              :aggregation.min/field (:field aggregation)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
       "global" base
@@ -1140,6 +1142,7 @@
   (let [base {:unformed.task-params/name :aggregation/max
               :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
+              :aggregation.max/field (:field aggregation)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
       "global" base
@@ -1152,6 +1155,7 @@
   (let [base {:unformed.task-params/name :aggregation/average
               :unformed.aggregation/window-type (keyword (:windowType aggregation))
               :unformed.aggregation/window-id (u/make-random-uuid)
+              :aggregation.average/field (:field aggregation)
               :aggregation/window-name (:name aggregation)}]
     (case (:windowType aggregation)
       "global" base
