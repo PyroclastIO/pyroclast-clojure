@@ -1163,7 +1163,7 @@
       "sliding" (into base (sliding-params "average" aggregation))
       "session" (into base (session-params "average" aggregation)))))
 
-(defmethod canonicalize-aggregation "customAggregation"
+(defmethod canonicalize-aggregation "customView"
   [aggregation]
   (let [base {:unformed.task-params/name :aggregation/javascript
               :unformed.aggregation/window-type (keyword (get-in aggregation [:params :windowType]))
@@ -1178,14 +1178,44 @@
       "sliding" (into base (sliding-params "javascript" aggregation))
       "session" (into base (session-params "javascript" aggregation)))))
 
-(defmethod canonicalize "materializeView"
-  [{:keys [params aggregations] :as task}]
+(defmethod canonicalize "materializeViews"
+  [{:keys [params views] :as task}]
   {:roaming.task/task-bundle-name :aggregation/multi
    :task/bundle-version 0
    :params
    (cond-> {}
      true
-     (assoc :unformed.aggregation.multi/bundles (mapv canonicalize-aggregation aggregations))
+     (assoc :unformed.aggregation.multi/bundles (mapv canonicalize-aggregation views))
 
      (:groupBy params)
      (assoc :aggregation.multi/group-by (:groupBy params)))})
+
+(defmulti canonicalize-trigger
+  (fn [trigger]
+    (:reactingTo trigger)))
+
+(defmethod canonicalize-trigger "recordArrival"
+  [trigger]
+  {:unformed.reactive-aggregation.trigger/on :record-arrival
+   :reactive-aggregation.trigger/flush-keys (get-in trigger [:params :flushKeys])
+   :reactive-aggregation.trigger/wrap-with-key (get-in trigger [:params :wrapWithKey])
+   :reactive-aggregation.trigger.record-arrival/count (get-in trigger [:params :every])})
+
+(defmethod canonicalize "reactivelyMaterializeView"
+  [{:keys [params view] :as task}]
+  {:roaming.task/task-bundle-name :reactive-aggregation/javascript
+   :task/bundle-version 0
+   :params
+   (let [base {:unformed.task-params/name :reactive-aggregation/javascript
+               :unformed.aggregation/window-type (keyword (get-in view [:params :windowType]))
+               :unformed.aggregation/window-id (u/make-random-uuid)
+               :reactive-aggregation.javascript/code (get-in view [:params :code])
+               :reactive-aggregation.javascript/initialize-function (get-in view [:params :initializeFunction])
+               :reactive-aggregation.javascript/update-function (get-in view [:params :updateFunction])
+               :unformed.reactive-aggregation/triggers (mapv canonicalize-trigger (:triggers view))
+               :aggregation/window-name (:name view)}]
+     (case (get-in view [:params :windowType])
+       "global" base
+       "fixed" (into base (fixed-params "javascript" view))
+       "sliding" (into base (sliding-params "javascript" view))
+       "session" (into base (session-params "javascript" view))))})
