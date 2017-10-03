@@ -180,7 +180,8 @@
 
 (defn make-query-criteria [{:keys [start end groups datetime-format sort?]}]
   (when groups
-    (assert (seq groups) "Groups must be a non-empty collection."))
+    (when (not (seq groups))
+      (throw (ex-info "Groups must be a non-empty collection." {:groups groups}))))
   (cond-> {}
     start (assoc :start start)
     end (assoc :end end)
