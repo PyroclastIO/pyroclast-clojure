@@ -4,7 +4,7 @@
             [clj-http.client :as client]
             [cheshire.core :refer [generate-string parse-string]]))
 
-(def default-region "us-east-1")
+(def default-region "us-west-2")
 
 (def unknown-message "Unknown problem. Open an issue on this repository if you're seeing this status.")
 
@@ -178,18 +178,25 @@
                      :throw-exceptions? false})]
     (process-service-response response)))
 
-(defn read-aggregate [{:keys [read-api-key deployment-id :as config]} aggregate-name]
-  (let [response
-        (client/get (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) deployment-id aggregate-name)
-                    {:headers {"Authorization" read-api-key}
-                     :accept :json
-                     :throw-exceptions? false})]
-    (process-service-response response)))
+(defn make-query-criteria [{:keys [start end groups datetime-format sort?]}]
+  (when groups
+    (when (not (seq groups))
+      (throw (ex-info "Groups must be a non-empty collection." {:groups groups}))))
+  (cond-> {}
+    start (assoc :start start)
+    end (assoc :end end)
+    groups (assoc :groups groups)
+    sort? (assoc :sort sort?)
+    datetime-format (assoc :datetime-format datetime-format)))
 
-(defn read-aggregate-group [{:keys [read-api-key deployment-id :as config]} aggregate-name group-name]
-  (let [response
-        (client/get (format "%s/v1/deployments/%s/aggregates/%s/group/%s" (base-url config) deployment-id aggregate-name group-name)
-                    {:headers {"Authorization" read-api-key}
-                     :accept :json
-                     :throw-exceptions? false})]
-    (process-service-response response)))
+(defn read-aggregate
+  ([config aggregate-name]
+   (read-aggregate config aggregate-name {}))
+  ([{:keys [read-api-key deployment-id] :as config} aggregate-name opts]
+   (let [response
+         (client/get (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) deployment-id aggregate-name)
+                     {:headers {"Authorization" read-api-key}
+                      :body (generate-string (make-query-criteria opts))
+                      :accept :json
+                      :throw-exceptions? false})]
+     (process-service-response response))))
