@@ -7,7 +7,7 @@ A Clojure library for sending events to a Pyroclast topic.
 With Leiningen:
 
 ```clojure
-[io.pyroclast/pyroclast-clojure "0.1.6"]
+[io.pyroclast/pyroclast-clojure "0.1.7"]
 ```
 
 ## Topic APIs
@@ -119,12 +119,6 @@ Define a configuration.
 
 ```clojure
 (client/read-aggregate config "aggregate-name")
-```
-
-#### Get a single aggregate group by name
-
-```clojure
-(client/read-aggregate-group config "aggregate-name" "group-name")
 ```
 
 ## Roaming
