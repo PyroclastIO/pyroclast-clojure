@@ -194,9 +194,9 @@
    (read-aggregate config aggregate-name {}))
   ([{:keys [read-api-key deployment-id] :as config} aggregate-name opts]
    (let [response
-         (client/get (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) deployment-id aggregate-name)
-                     {:headers {"Authorization" read-api-key}
-                      :body (generate-string (make-query-criteria opts))
-                      :accept :json
-                      :throw-exceptions? false})]
+         (client/post (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) deployment-id aggregate-name)
+                      {:headers {"Authorization" read-api-key}
+                       :body (generate-string (make-query-criteria opts))
+                       :accept :json
+                       :throw-exceptions? false})]
      (process-service-response response))))
