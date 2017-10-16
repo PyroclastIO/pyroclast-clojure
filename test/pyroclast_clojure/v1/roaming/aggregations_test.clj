@@ -3,7 +3,7 @@
             [pyroclast-clojure.v1.roaming.client :as roaming]
             [pyroclast-clojure.v1.roaming.aggregations :as a]
             [pyroclast-clojure.v1.roaming.service :as s]
-            [pyroclast-clojure.v1.roaming.topic :as t]))
+            [pyroclast-clojure.v1.roaming.topic :as t]
             [pyroclast-clojure.util :as u]))
 
 (def records
