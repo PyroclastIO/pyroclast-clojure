@@ -17,12 +17,12 @@
               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}})
           ret2 (promise)
           _ @(client/send-events-async!
-              config 
+              config
               (fn [results] (deliver ret2 results))
               [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
                {:value {:event-type "page-visit" :page "console" :timestamp 1495072895032}}])]
-      
-      (is (= {:created true} @ret1))  
+
+      (is (= {:created true} @ret1))
       (is (= {:created true}
              @ret2)))
 
@@ -30,19 +30,19 @@
           sub-response (client/subscribe-to-topic! config group)
           poll-response (client/poll-topic! config group)
           commit-response (client/commit-read-records! config group)]
-      (is (:success? sub-response))
-      (is (:success? poll-response))
+      (is sub-response)
+      (is poll-response)
       (is (= 6 (count (:records poll-response))))
-      (is (:success? commit-response)))))
+      (is commit-response))))
 
 (deftest ^:performance producer-tests
-  (time 
-   (let [config (:topic (u/load-config "config.edn"))] 
+  (time
+   (let [config (:topic (u/load-config "config.edn"))]
      (dotimes [r 50]
-       (run! deref (pmap (fn [i] 
-                           (let [ret2 (promise)] 
+       (run! deref (pmap (fn [i]
+                           (let [ret2 (promise)]
                              (client/send-events-async!
-                              config 
+                              config
                               (fn [results] (deliver ret2 results))
                               [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
                                {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}

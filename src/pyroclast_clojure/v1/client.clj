@@ -98,63 +98,68 @@
                (fn [response] (callback (process-topic-response response)))
                (fn [e] (process-exception e))))
 
-(defn process-subscribe-response [{:keys [status body] :as response}]
-  (cond (= status 200)
-        {:success? true
-         :group-id (:group-id (parse-string body true))}
+(defn subscribe-to-topic!
+  "Creates a new consumer, joining it to the specified consumer group. Returns a
+  consumer instance map.
 
-        (= status 401)
-        {:success? false :reason "API key unauthorized to perform this action."}
-
-        :else
-        {:success? false :reason unknown-message :response response}))
-
-(defn subscribe-to-topic! [{:keys [read-api-key topic-id] :as config} subscriber-name]
-  (when (not (re-matches #"[a-zA-Z0-9-_]+" subscriber-name))
-    (throw (ex-info "Subscriber name must be a non-empty string of alphanumeric characters." {})))
+  offset - One of `:earliest` or `:latest`
+  partitions - A list of partitions to consumer from. `:all` will consume from all partitions"
+  [{:keys [read-api-key topic-id] :as config} consumer-group-name {:keys [offset partitions]
+                                                                   :or {offset :earliest
+                                                                        partitions :all}}]
+  (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
+    (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
+  (assert (#{:earliest :latest} offset))
   (let [response
-        (client/post (format "%s/v1/topics/%s/subscribe/%s" (base-url config) topic-id subscriber-name)
+        (client/post (format "%s/v1/topics/%s/consumers/%s/subscribe" (base-url config) topic-id consumer-group-name)
                      {:headers {"Authorization" read-api-key}
                       :accept :json
-                      :throw-exceptions? false})]
-    (process-subscribe-response response)))
+                      :content-type :json
+                      :body (generate-string {"offset" offset
+                                              "partitions" partitions})
+                      :throw-exceptions? false})
+        {:keys [status body]} response]
+    (cond (= status 201)
+          (parse-string body true)
 
-(defn process-poll-response [{:keys [status body] :as response}]
-  (cond (= status 200)
-        {:success? true
-         :records (parse-string body true)}
+          (= status 401)
+          (ex-info "API key unauthorized to perform this action." {})
 
-        (= status 401)
-        {:success? false :reason "API key unauthorized to perform this action."}
+          :else
+          (ex-info unknown-message {:response response}))))
 
-        :else
-        {:success? false :reason unknown-message :response response}))
-
-(defn poll-topic! [{:keys [read-api-key topic-id] :as config} subscriber-name]
+(defn poll-topic!
+  "Polls a topic using a consumer instance map."
+  [{:keys [read-api-key topic-id] :as config} {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
   (let [response
-        (client/post (format "%s/v1/topics/%s/poll/%s" (base-url config) topic-id subscriber-name)
+        (client/post (format "%s/v1/topics/%s/consumers/%s/instances/%s/poll" (base-url config) topic-id group-id consumer-instance-id)
                      {:headers {"Authorization" read-api-key}
                       :accept :json
-                      :throw-exceptions? false})]
-    (process-poll-response response)))
+                      :throw-exceptions? false})
+        {:keys [status body]} response]
+    (cond (= status 200)
+          (parse-string body true)
 
-(defn process-commit-read-response [{:keys [status body] :as response}]
-  (cond (= status 200)
-        {:success? true}
+          (= status 401)
+          (ex-info "API key unauthorized to perform this action." {})
 
-        (= status 401)
-        {:success? false :reason "API key unauthorized to perform this action."}
+          :else
+          (ex-info unknown-message {:response response}))))
 
-        :else
-        {:success? false :reason unknown-message :response response}))
-
-(defn commit-read-records! [{:keys [read-api-key topic-id] :as config} subscriber-name]
+(defn commit-read-records! [{:keys [read-api-key topic-id] :as config} {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
   (let [response
-        (client/post (format "%s/v1/topics/%s/poll/%s/commit" (base-url config) topic-id subscriber-name)
+        (client/post (format "%s/v1/topics/%s/consumers/%s/instances/%s/commit" (base-url config) topic-id group-id consumer-instance-id)
                      {:headers {"Authorization" read-api-key}
                       :accept :json
-                      :throw-exceptions? false})]
-    (process-commit-read-response response)))
+                      :throw-exceptions? false})
+        {:keys [status body]} response]
+    (cond (= status 200) true
+
+          (= status 401)
+          (ex-info "API key unauthorized to perform this action." {})
+
+          :else
+          (ex-info unknown-message {:response response}))))
 
 (defn process-service-response [{:keys [status body] :as response}]
   (cond (= status 200)
