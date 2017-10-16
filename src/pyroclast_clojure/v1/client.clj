@@ -104,29 +104,31 @@
 
   offset - One of `:earliest` or `:latest`
   partitions - A list of partitions to consumer from. `:all` will consume from all partitions"
-  [{:keys [read-api-key topic-id] :as config} consumer-group-name {:keys [offset partitions]
-                                                                   :or {offset :earliest
-                                                                        partitions :all}}]
-  (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
-    (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
-  (assert (#{:earliest :latest} offset))
-  (let [response
-        (client/post (format "%s/v1/topics/%s/consumers/%s/subscribe" (base-url config) topic-id consumer-group-name)
-                     {:headers {"Authorization" read-api-key}
-                      :accept :json
-                      :content-type :json
-                      :body (generate-string {"offset" offset
-                                              "partitions" partitions})
-                      :throw-exceptions? false})
-        {:keys [status body]} response]
-    (cond (= status 201)
-          (parse-string body true)
+  ([{:keys [read-api-key topic-id] :as config} consumer-group-name]
+   (subscribe-to-topic! config consumer-group-name {}))
+  ([{:keys [read-api-key topic-id] :as config} consumer-group-name {:keys [offset partitions]
+                                                                    :or {offset :earliest
+                                                                         partitions :all}}]
+   (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
+     (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
+   (assert (#{:earliest :latest} offset))
+   (let [response
+         (client/post (format "%s/v1/topics/%s/consumers/%s/subscribe" (base-url config) topic-id consumer-group-name)
+                      {:headers {"Authorization" read-api-key}
+                       :accept :json
+                       :content-type :json
+                       :body (generate-string {"offset" offset
+                                               "partitions" partitions})
+                       :throw-exceptions? false})
+         {:keys [status body]} response]
+     (cond (= status 201)
+           (parse-string body true)
 
-          (= status 401)
-          (ex-info "API key unauthorized to perform this action." {})
+           (= status 401)
+           (ex-info "API key unauthorized to perform this action." {})
 
-          :else
-          (ex-info unknown-message {:response response}))))
+           :else
+           (ex-info unknown-message {:response response})))))
 
 (defn poll-topic!
   "Polls a topic using a consumer instance map."
@@ -146,6 +148,16 @@
           :else
           (ex-info unknown-message {:response response}))))
 
+(defn process-commit-read-response [{:keys [status body] :as response}]
+  (cond (= status 200)
+        {:success? true}
+
+        (= status 401)
+        {:success? false :reason "API key unauthorized to perform this action."}
+
+        :else
+        {:success? false :reason unknown-message :response response}))
+
 (defn commit-read-records! [{:keys [read-api-key topic-id] :as config} {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
   (let [response
         (client/post (format "%s/v1/topics/%s/consumers/%s/instances/%s/commit" (base-url config) topic-id group-id consumer-instance-id)
@@ -153,7 +165,8 @@
                       :accept :json
                       :throw-exceptions? false})
         {:keys [status body]} response]
-    (cond (= status 200) true
+    (cond (= status 200)
+          true
 
           (= status 401)
           (ex-info "API key unauthorized to perform this action." {})

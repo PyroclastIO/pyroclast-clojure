@@ -76,22 +76,18 @@ Define a configuration.
    :format :json})
 ```
 
-#### Subscribe to a topic
+#### Subscribe and poll a topic
 
 ```clojure
-(client/subscribe-to-topic! config "your-subscriber-name")
+(def consumer-instance-map (client/subscribe-to-topic! config "consumer-group-name"))
+(client/poll-topic! config consumer-instance-map)
 ```
 
-#### Poll subscribed topic
-
-```clojure
-(client/poll-topic! config "your-subscriber-name")
-```
 
 #### Commit read records
 
 ```clojure
-(client/commit-read-records! config "your-subscriber-name")
+(client/commit-read-records! config consumer-instance-map)
 ```
 
 ## Deployed Service APIs
