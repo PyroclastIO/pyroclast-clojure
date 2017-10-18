@@ -14,107 +14,102 @@ With Leiningen:
 
 ### Writing events
 
-Define a configuration.
+Events must contain a value key, which describes the message, and may also
+contain a optional `:key` key, which will be used to route particular messages to
+particular topic partitions, and can be accessed for other purposes. Events are
+converted to json before sending, which is lossy for namespaced keys.
 
 ```clojure
 (require '[pyroclast-clojure.v1.client :as client])
 
 (def config
-  {:write-api-key "<token>"
-   :topic-id "<topic-id>"
-   :format :json})
-```
+  {:pyroclast.topic/id "topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6"
+   :pyroclast.topic/write-key "d8b5869d-69a9-4935-9a35-cd0f67379124"
+   :pyroclast.api/region "us-west-2"})
 
-Events must contain a value key, which describes the message, and may also
-contain a optional key key, which will be used to route particular messages to
-particular topic partitions, and can be accessed for other purposes.
+;; Send a single event asynchronously, returning a promise
+(def resp (topic-send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}))
+;; Use clojure.core/deref to block on promise resolution
+@resp ;; => true
+;; Can use deref/@ inline for a synchronous operation.
+@(topic-send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}) ;; => true
 
-#### Send one event synchronously
+;; Batch events together for better performance
+@(topic-send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835032}}]) ;; => true
 
-```clojure
-(client/send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}})
-```
-
-Response: `{:created true}`
-
-#### Send a batch of events synchronously
-
-```clojure
-(client/send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
-                             {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}])
-```
-
-Response: `{:created true}`
-
-#### Send one event asynchronously
-
-```clojure
-(client/send-event-async!
-  config (fn [result] (println result))
-  {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}})
-```
-
-#### Send a batch of events asynchronously
-
-```clojure
-(client/send-events-async!
-  config (fn [results] (println results))
-  [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-   {:value {:event-type "page-visit" :page "console" :timestamp 1495072895032}}])
 ```
 
 ### Reading events
 
-Define a configuration.
+Read events from Pyroclast Topics.
 
 ```clojure
 (require '[pyroclast-clojure.v1.client :as client])
 
 (def config
-  {:read-api-key "<token>"
-   :topic-id "<topic-id>"
-   :format :json})
-```
+  {:pyroclast.topic/read-key "db621c74-0d8d-41ed-b4e2-d4279e8b46f8"
+   :pyroclast.topic/id "topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6"
+   :pyroclast.api/region "us-west-2"})
 
-#### Subscribe and poll a topic
+;; Subscribe to a topic, registering a new Consumer Group
+(def consumer-instance-map @(client/topic-subscribe config "my-consumer-group"))
+;; => {:group-id my-consumer-group, :consumer-instance-id 4e5f319b-4f97-4556-b0b6-aa9a9ff087f3}
+;;
+;; Poll the topic using the consumer instance map returned from topic-subscribe.
+;; Note that JSON records are returned.
+@(client/topic-consumer-poll! config consumer-instance-map)
+;; => [{"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835000}}
+;;     {"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835032}}]
 
-```clojure
-(def consumer-instance-map (client/subscribe-to-topic! config "consumer-group-name"))
-(client/poll-topic! config consumer-instance-map)
-```
 
 
-#### Commit read records
+;; Subsequent topic-consumer-poll!'s return nothing, since we've already consumed up to
+;; the largest offset on our consumer instance.
+@(client/topic-consumer-poll! config consumer-instance-map)
+;; => []
 
-```clojure
-(client/commit-read-records! config consumer-instance-map)
+;; Reset back to the beginning with
+(client/topic-consumer-seek-beginning config consumer-instance-map) ;; => true
+
+;; Polling returns results again.
+@(client/topic-consumer-poll! config consumer-instance-map)
+;; => [{"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835000}}
+;;     {"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835032}}]
+
+
+
+;; Commit the highest offset the consumer has read from, so consumer
+;; instances on the consumer group "my-consumer-group" will start
+;; reading after this commit.
+(client/topic-consumer-commit-offsets config consumer-instance-map)
+;; => true
+
+(def new-consumer-instance @(topic-subscribe config "my-consumer-group"))
+@(client/topic-consumer-poll! config new-consumer-instance)
+;; => []
+
 ```
 
 ## Deployed Service APIs
 
-### Read deployed service aggregations
-
-Define a configuration.
-
+Read aggregates from Pyroclast deployments.
 ```clojure
 (require '[pyroclast-clojure.v1.client :as client])
 
 (def config
-  {:read-api-key "<token>"
-   :region "<region>"
-   :deployment-id "<deployment-id>"})
-```
+  {:pyroclast.deployment/id "59e75abd-5d68-43a2-aef3-eb7c2f61dafa"
+   :pyroclast.deployment/read-key "3a2b87ae-1042-4a24-bc4e-b56e1ca50170"
+   :pyroclast.api/region "us-west-2"})
 
-#### Get all aggregates for a deployed service
+;; Fetch aggregates for a deployment
+@(client/deployment-fetch-aggregates config)
 
-```clojure
-(client/read-aggregates config)
-```
-
-#### Get an aggregate by name for a deployed service
-
-```clojure
-(client/read-aggregate config "aggregate-name")
+;; Fetch a specific aggregate for a deployment
+;; with optional keys restricting the amount of data
+;; returned
+@(client/deployment-fetch-aggregates config "login-per-second" {:start 1495072835000
+                                                                :end 1495072836000})
 ```
 
 ## Roaming

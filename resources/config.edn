@@ -3,4 +3,11 @@
          :write-api-key ""
          :topic-id ""
          :endpoint ""
-         :format :json}}
+         :format :json}
+ :client-config {:pyroclast.topic/write-key "d8b5869d-69a9-4935-9a35-cd0f67379124"
+                 :pyroclast.topic/read-key "db621c74-0d8d-41ed-b4e2-d4279e8b46f8"
+                 :pyroclast.topic/id "topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6"
+                 :pyroclast.deployment/id "59e75abd-5d68-43a2-aef3-eb7c2f61dafa"
+                 :pyroclast.deployment/read-key "3a2b87ae-1042-4a24-bc4e-b56e1ca50170"
+                 :pyroclast.api/endpoint "http://localhost:10556"
+                 :pyroclast.api/region "us-west-2"}}

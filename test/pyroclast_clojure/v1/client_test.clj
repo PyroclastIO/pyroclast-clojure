@@ -4,55 +4,34 @@
             [clojure.test :refer [is deftest]]))
 
 (deftest ^:topic producer-tests
-  (let [config (:topic (u/load-config "config.edn"))]
-    (is (= {:created true} (client/send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}})))
+  (let [config (:client-config (u/load-config "config.edn"))]
+    (is @(client/topic-send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}))
 
-    (is (= {:created true}
-           (client/send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
-                                        {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}])))
-
-    (let [ret1 (promise)
-          _ @(client/send-event-async!
-              config (fn [result] (deliver ret1 result))
-              {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}})
-          ret2 (promise)
-          _ @(client/send-events-async!
-              config
-              (fn [results] (deliver ret2 results))
-              [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-               {:value {:event-type "page-visit" :page "console" :timestamp 1495072895032}}])]
-
-      (is (= {:created true} @ret1))
-      (is (= {:created true}
-             @ret2)))
+    (is @(client/topic-send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
+                                            {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}]))
 
     (let [group "my-subscriber-group"
-          sub-response (client/subscribe-to-topic! config group)
-          poll-response (client/poll-topic! config group)
-          commit-response (client/commit-read-records! config group)]
-      (is sub-response)
-      (is poll-response)
-      (is (= 6 (count (:records poll-response))))
-      (is commit-response))))
+          consumer-instance-map @(client/topic-subscribe config group)]
+      (is (pos? (count @(client/topic-consumer-poll! config consumer-instance-map))))
+      (is (client/topic-consumer-commit-offsets config consumer-instance-map))
+      (is (empty? @(client/topic-consumer-poll! config consumer-instance-map))))))
 
 (deftest ^:performance producer-tests
+  (is true)
   (time
-   (let [config (:topic (u/load-config "config.edn"))]
+   (let [config (:client-config (u/load-config "config.edn"))]
      (dotimes [r 50]
-       (run! deref (pmap (fn [i]
-                           (let [ret2 (promise)]
-                             (client/send-events-async!
-                              config
-                              (fn [results] (deliver ret2 results))
-                              [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
-                               {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}])
-                             ret2))
+       (run! deref (mapv (fn [i]
+                           (client/topic-send-events!
+                            config
+                            [{:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}
+                             {:value {:event-type "page-visit" :page "store" :timestamp 1495072835000}}]))
                          (range 50)))))))
