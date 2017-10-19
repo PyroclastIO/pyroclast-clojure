@@ -53,7 +53,7 @@ Read events from Pyroclast Topics.
    :pyroclast.api/region "us-west-2"})
 
 ;; Subscribe to a topic, registering a new Consumer Group
-(def consumer-instance-map @(client/topic-subscribe config "my-consumer-group"))
+(def consumer-instance-map (client/topic-subscribe config "my-consumer-group"))
 ;; => {:group-id my-consumer-group, :consumer-instance-id 4e5f319b-4f97-4556-b0b6-aa9a9ff087f3}
 ;;
 ;; Poll the topic using the consumer instance map returned from topic-subscribe.
@@ -85,7 +85,7 @@ Read events from Pyroclast Topics.
 (client/topic-consumer-commit-offsets config consumer-instance-map)
 ;; => true
 
-(def new-consumer-instance @(topic-subscribe config "my-consumer-group"))
+(def new-consumer-instance (topic-subscribe config "my-consumer-group"))
 @(client/topic-consumer-poll! config new-consumer-instance)
 ;; => []
 

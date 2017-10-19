@@ -54,7 +54,8 @@
     (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
     (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
     (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
-    :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+    :else (md/error! deferred (ex-info (format "Unknown status %s. Open an issue on this repository if you're seeing this status." status) 
+                                       {})))) 
 
 (defn topic-send-event!
   "Send a single event to a Pyroclast topic.
@@ -104,14 +105,16 @@
   :auto-offset-reset - One of `:earliest` or `:latest`. Defaults to :earliest
   :partitions - A list of partitions to consumer from. `:all` will consume from all partitions. Defaults to :all
 
-  Returns a dereffable deferred."
+  Returns a topic instance map."
   ([config consumer-group-name] (topic-subscribe config consumer-group-name {}))
-  ([{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config} consumer-group-name {:keys [auto-offset-reset partitions]
-                                                                                          :or {auto-offset-reset :earliest partitions :all}}]
+  ([{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config} 
+    consumer-group-name 
+    {:keys [auto-offset-reset partitions]
+     :or {auto-offset-reset :earliest partitions :all}}]
    (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
      (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
    (assert (#{:earliest :latest} auto-offset-reset) ":offset options must be one of :earliest or :latest")
-   (let [promise (md/deferred)]
+   (let [prom (md/deferred)]
      (http/post (topic-subscribe-url config consumer-group-name)
                 {:async? true
                  :throw-exceptions true
@@ -120,10 +123,10 @@
                  :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
                 (fn [{:keys [status body] :as resp}]
                   (if (= 201 status)
-                    (md/success! promise (json/parse-string body true))
-                    (common-response promise resp)))
-                (partial md/error! promise))
-     promise)))
+                    (md/success! prom (json/parse-string body true))
+                    (common-response prom resp)))
+                (partial md/error! prom))
+     (deref prom))))
 
 (defn topic-consumer-poll!
   "Takes a Pyroclast API config and a consumer instance map as returned by

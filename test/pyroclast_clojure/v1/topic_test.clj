@@ -1,4 +1,4 @@
-(ns pyroclast-clojure.v1.client-test
+(ns pyroclast-clojure.v1.topic-test
   (:require [pyroclast-clojure.v1.client :as client]
             [pyroclast-clojure.util :as u]
             [clojure.test :refer [is deftest]]))
