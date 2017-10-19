@@ -5,7 +5,6 @@
 
 (def default-region "us-west-2")
 
-;;;; URLs
 (defn- base-url [{:keys [pyroclast.api/region pyroclast.api/endpoint] :or {region default-region} :as config}]
   (if endpoint
     endpoint
@@ -46,25 +45,23 @@
   [{:keys [pyroclast.deployment/id] :as config} aggregate-name]
   (format "%s/v1/deployments/%s/aggregates/%s" (base-url config) id aggregate-name))
 
-;;; Produce
 (defn- validate-event! [event]
   (when-not (contains? event :value)
     (throw (ex-info "Event requires :value key" {:event event}))))
 
-(defn- check-topic-produce-response
-  "Handles API and HTTP Client errors, bubbling both back up the promise chain."
-  [deferred {:keys [status] :as response}]
-  (cond (= status 200) (md/success! deferred true)
-        (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-        (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-        :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+(defn- common-response [deferred {:keys [status body] :as response}]
+  (cond
+    (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
+    (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
+    (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
+    :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
 
 (defn topic-send-event!
   "Send a single event to a Pyroclast topic.
   Event must be of the form {:value ...}.
   Returns a dereffable deferred."
   ([{:keys [pyroclast.topic/write-key pyroclast.topic/id] :as config} event]
-   (let [response (md/deferred)]
+   (let [promise (md/deferred)]
      (validate-event! event)
      (http/post (topic-produce-url config)
                 {:async? true
@@ -72,16 +69,19 @@
                  :headers {"Content-type" "application/json"
                            "Authorization" write-key}
                  :body (json/generate-string event)}
-                (partial check-topic-produce-response response)
-                (partial md/error! response))
-     response)))
+                (fn [{:keys [status] :as resp}]
+                  (if (= 200 status)
+                    (md/success! promise true)
+                    (common-response promise resp)))
+                (partial md/error! promise))
+     promise)))
 
 (defn topic-send-events!
   "Send a batch of events to a Pyroclast topic.
   Event must be of the form [{:value ...} {:value ...}].
   Returns a dereffable deferred."
   ([{:keys [pyroclast.topic/write-key pyroclast.topic/id] :as config} events]
-   (let [response (md/deferred)]
+   (let [promise (md/deferred)]
      (run! validate-event! events)
      (http/post (topic-bulk-produce-url config)
                 {:async? true
@@ -89,17 +89,12 @@
                  :headers {"Content-type" "application/json"
                            "Authorization" write-key}
                  :body (json/generate-string events)}
-                (comp (partial check-topic-produce-response response))
-                (partial md/error! response))
-     response)))
-
-(defn- check-topic-subscribe-response
-  "Handles API and HTTP Client errors, bubbling both back up the promise chain."
-  [deferred {:keys [status body] :as response}]
-  (cond (= status 201) (md/success! deferred (json/parse-string body true))
-        (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-        (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-        :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+                (fn [{:keys [status] :as resp}]
+                  (if (= 200 status)
+                    (md/success! promise true)
+                    (common-response promise resp)))
+                (partial md/error! promise))
+     promise)))
 
 (defn topic-subscribe
   "Creates a new consumer instance, returns a consumer instance map able to
@@ -116,24 +111,19 @@
    (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
      (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
    (assert (#{:earliest :latest} auto-offset-reset) ":offset options must be one of :earliest or :latest")
-   (let [response (md/deferred)]
+   (let [promise (md/deferred)]
      (http/post (topic-subscribe-url config consumer-group-name)
                 {:async? true
                  :throw-exceptions true
                  :headers {"Content-type" "application/json"
                            "Authorization" read-key}
                  :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
-                (partial check-topic-subscribe-response response)
-                (partial md/error! response))
-     response)))
-
-(defn- check-topic-poll-response
-  "Handles API and HTTP Client errors, bubbling both back up the promise chain."
-  [deferred {:keys [status body] :as response}]
-  (cond (= status 200) (md/success! deferred (vec (json/parse-string body)))
-        (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-        (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-        :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+                (fn [{:keys [status body] :as resp}]
+                  (if (= 201 status)
+                    (md/success! promise (json/parse-string body true))
+                    (common-response promise resp)))
+                (partial md/error! promise))
+     promise)))
 
 (defn topic-consumer-poll!
   "Takes a Pyroclast API config and a consumer instance map as returned by
@@ -143,57 +133,57 @@
    {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
   (assert group-id "Must supply a consumer instance map with a :group-id")
   (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
-  (let [response (md/deferred)]
+  (let [promise (md/deferred)]
     (http/post (topic-poll-url config group-id consumer-instance-id)
                {:async? true
                 :throw-exceptions true
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}}
-               (partial check-topic-poll-response response)
-               (partial md/error! response))
-    response))
-
-(defn- check-topic-commit-response
-  "Handles API and HTTP Client errors, bubbling both back up the promise chain."
-  [deferred {:keys [status body] :as response}]
-  (cond (= status 200) (md/success! deferred true)
-        (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-        (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-        (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
-        :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+               (fn [{:keys [status body] :as resp}]
+                 (if (= 200 status)
+                   (md/success! promise (vec (json/parse-string body)))
+                   (common-response promise resp)))
+               (partial md/error! promise))
+    promise))
 
 (defn topic-consumer-commit-offsets
   "Commit a consumer group instance's current offset. Ensures that after this operation
   succeeds, new subscriptions will not see records before the current offset."
   [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
    {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
-  (let [response (md/deferred)]
+  (let [promise (md/deferred)]
     (http/post (topic-commit-url config group-id consumer-instance-id)
                {:async? true
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}
                 :throw-exceptions true
                 :as :text}
-               (partial check-topic-commit-response response)
-               (partial md/error! response))
+               (fn [{:keys [status] :as resp}]
+                 (if (= 200 status)
+                   (md/success! promise true)
+                   (common-response promise resp)))
+               (partial md/error! promise))
     ;; Probably want this to be synchronous to avoid late commits.
-    @response))
+    @promise))
 
 (defn- topic-consumer-seek-simple
   [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
    {:keys [group-id consumer-instance-id] :as consumer-instance-map}
    direction]
   (assert (#{"beginning" "end"} direction) "seek direction must be one of :beginning or :end")
-  (let [response (md/deferred)]
+  (let [promise (md/deferred)]
     (http/post (topic-seek-url config group-id consumer-instance-id direction)
                {:async? true
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}
                 :throw-exceptions true
                 :as :text}
-               (partial check-topic-commit-response response)
-               (partial md/error! response))
-    @response))
+               (fn [{:keys [status] :as resp}]
+                 (if (= 200 status)
+                   (md/success! promise true)
+                   (common-response promise resp)))
+               (partial md/error! promise))
+    @promise))
 
 (defn topic-consumer-seek-beginning
   "Seek a consumer across all of it's assigned partitions to the last lowest
@@ -227,7 +217,7 @@
    partition-directives]
   (assert (every? :partition partition-directives) "All partition directives must contain a :partition key.")
   (assert (every? (fn [m] (or (:offset m) (:timestamp m))) partition-directives) "All partition directives must contain either a :offset or a :timestamp key")
-  (let [response (md/deferred)]
+  (let [promise (md/deferred)]
     (http/post (topic-seek-url config group-id consumer-instance-id)
                {:async? true
                 :throw-exceptions true
@@ -235,17 +225,12 @@
                           "Authorization" read-key}
 
                 :body (json/generate-string partition-directives)}
-               (partial check-topic-commit-response response)
-               (partial md/error! response))
-    @response))
-
-(defn- check-deployment-aggregates-response
-  "Handles API and HTTP Client errors, bubbling both back up the promise chain."
-  [deferred {:keys [status body] :as response}]
-  (cond (= status 200) (md/success! deferred (json/parse-string body))
-        (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-        (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-        :else (md/error! deferred (ex-info "Unknown problem. Open an issue on this repository if you're seeing this status." {}))))
+               (fn [{:keys [status] :as resp}]
+                 (if (= 200 status)
+                   (md/success! promise true)
+                   (common-response promise resp)))
+               (partial md/error! promise))
+    @promise))
 
 (defn deployment-fetch-aggregate
   "Return a subset of data from a specific deployment aggregate. Subset is specified
@@ -258,7 +243,7 @@
   `:groups` - a subset of groups to return if using a session window.
   `:sort` - a boolean indicating if the aggregate should be sorted by timestamp."
   [{:keys [pyroclast.deployment/read-key pyroclast.deployment/id] :as config} aggregate-name {:keys [start end groups sort] :as query}]
-  (let [response (md/deferred)
+  (let [promise (md/deferred)
         query (assoc query :datetime-format :iso-8601)]
     (http/get (deployment-aggregate-url config aggregate-name)
               {:async? true
@@ -266,24 +251,30 @@
                :headers {"Content-type" "application/json"
                          "Authorization" read-key}
                :body (json/generate-string query)}
-              (partial check-deployment-aggregates-response response)
-              (partial md/error! response))
-    response))
+              (fn [{:keys [status body] :as resp}]
+                (if (= 200 status)
+                  (md/success! promise (json/parse-string body))
+                  (common-response promise resp)))
+              (partial md/error! promise))
+    promise))
 
 (defn deployment-fetch-aggregates
   "Returns the full aggregate for a deployment.
   Returns a dereffable deferred containing the full aggregate corresponding to
   the deployment specified in config."
   [{:keys [pyroclast.deployment/read-key pyroclast.deployment/id] :as config}]
-  (let [response (md/deferred)]
+  (let [promise (md/deferred)]
     (http/get (deployment-aggregates-url config)
               {:async? true
                :throw-exceptions true
                :headers {"Content-type" "application/json"
                          "Authorization" read-key}}
-              (partial check-deployment-aggregates-response response)
-              (partial md/error! response))
-    response))
+              (fn [{:keys [status body] :as resp}]
+                (if (= 200 status)
+                  (md/success! promise (json/parse-string body))
+                  (common-response promise resp)))
+              (partial md/error! promise))
+    promise))
 
 ;; Unimplemented
 #_(defn stream-topic!
