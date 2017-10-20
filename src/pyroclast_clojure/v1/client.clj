@@ -54,8 +54,8 @@
     (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
     (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
     (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
-    :else (md/error! deferred (ex-info (format "Unknown status %s. Open an issue on this repository if you're seeing this status." status) 
-                                       {})))) 
+    :else (md/error! deferred (ex-info (format "Unknown status %s. Open an issue on this repository if you're seeing this status." status)
+                                       {}))))
 
 (defn topic-send-event!
   "Send a single event to a Pyroclast topic.
@@ -86,7 +86,7 @@
      (run! validate-event! events)
      (http/post (topic-bulk-produce-url config)
                 {:async? true
-                 :throw-exceptions true
+                 :throw-exceptions false
                  :headers {"Content-type" "application/json"
                            "Authorization" write-key}
                  :body (json/generate-string events)}
@@ -107,8 +107,8 @@
 
   Returns a topic instance map."
   ([config consumer-group-name] (topic-subscribe config consumer-group-name {}))
-  ([{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config} 
-    consumer-group-name 
+  ([{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
+    consumer-group-name
     {:keys [auto-offset-reset partitions]
      :or {auto-offset-reset :earliest partitions :all}}]
    (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
@@ -117,7 +117,7 @@
    (let [prom (md/deferred)]
      (http/post (topic-subscribe-url config consumer-group-name)
                 {:async? true
-                 :throw-exceptions true
+                 :throw-exceptions false
                  :headers {"Content-type" "application/json"
                            "Authorization" read-key}
                  :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
@@ -139,7 +139,7 @@
   (let [promise (md/deferred)]
     (http/post (topic-poll-url config group-id consumer-instance-id)
                {:async? true
-                :throw-exceptions true
+                :throw-exceptions false
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}}
                (fn [{:keys [status body] :as resp}]
@@ -159,7 +159,7 @@
                {:async? true
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}
-                :throw-exceptions true
+                :throw-exceptions false
                 :as :text}
                (fn [{:keys [status] :as resp}]
                  (if (= 200 status)
@@ -179,7 +179,7 @@
                {:async? true
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}
-                :throw-exceptions true
+                :throw-exceptions false
                 :as :text}
                (fn [{:keys [status] :as resp}]
                  (if (= 200 status)
@@ -223,7 +223,7 @@
   (let [promise (md/deferred)]
     (http/post (topic-seek-url config group-id consumer-instance-id)
                {:async? true
-                :throw-exceptions true
+                :throw-exceptions false
                 :headers {"Content-type" "application/json"
                           "Authorization" read-key}
 
@@ -250,7 +250,7 @@
         query (assoc query :datetime-format :iso-8601)]
     (http/get (deployment-aggregate-url config aggregate-name)
               {:async? true
-               :throw-exceptions true
+               :throw-exceptions false
                :headers {"Content-type" "application/json"
                          "Authorization" read-key}
                :body (json/generate-string query)}
@@ -269,7 +269,7 @@
   (let [promise (md/deferred)]
     (http/get (deployment-aggregates-url config)
               {:async? true
-               :throw-exceptions true
+               :throw-exceptions false
                :headers {"Content-type" "application/json"
                          "Authorization" read-key}}
               (fn [{:keys [status body] :as resp}]
