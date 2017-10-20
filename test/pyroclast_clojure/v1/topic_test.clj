@@ -8,6 +8,7 @@
     (let [group "my-subscriber-group"
           consumer-instance-map (client/topic-subscribe config group)]
       (client/topic-consumer-seek-end consumer-instance-map)
+      (client/topic-consumer-information consumer-instance-map)
       (is (zero? (count @(client/topic-consumer-poll! consumer-instance-map))))
       (client/topic-consumer-seek-end consumer-instance-map)
       (is (zero? (count @(client/topic-consumer-poll! consumer-instance-map))))
