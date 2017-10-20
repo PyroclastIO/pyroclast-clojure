@@ -58,7 +58,7 @@ Read events from Pyroclast Topics.
 ;;
 ;; Poll the topic using the consumer instance map returned from topic-subscribe.
 ;; Note that JSON records are returned.
-@(client/topic-consumer-poll! config consumer-instance-map)
+@(client/topic-consumer-poll! consumer-instance-map)
 ;; => [{"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835000}}
 ;;     {"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835032}}]
 
@@ -66,14 +66,14 @@ Read events from Pyroclast Topics.
 
 ;; Subsequent topic-consumer-poll!'s return nothing, since we've already consumed up to
 ;; the largest offset on our consumer instance.
-@(client/topic-consumer-poll! config consumer-instance-map)
+@(client/topic-consumer-poll! consumer-instance-map)
 ;; => []
 
 ;; Reset back to the beginning with
-(client/topic-consumer-seek-beginning config consumer-instance-map) ;; => true
+(client/topic-consumer-seek-beginning consumer-instance-map) ;; => true
 
 ;; Polling returns results again.
-@(client/topic-consumer-poll! config consumer-instance-map)
+@(client/topic-consumer-poll! consumer-instance-map)
 ;; => [{"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835000}}
 ;;     {"value" {"event-type" "page-visit" "page" "/home" "timestamp" 1495072835032}}]
 
@@ -82,11 +82,12 @@ Read events from Pyroclast Topics.
 ;; Commit the highest offset the consumer has read from, so consumer
 ;; instances on the consumer group "my-consumer-group" will start
 ;; reading after this commit.
-(client/topic-consumer-commit-offsets config consumer-instance-map)
+(client/topic-consumer-commit-offsets consumer-instance-map)
 ;; => true
 
+;; New consumer instances start reading after the last commit.
 (def new-consumer-instance (topic-subscribe config "my-consumer-group"))
-@(client/topic-consumer-poll! config new-consumer-instance)
+@(client/topic-consumer-poll! new-consumer-instance)
 ;; => []
 
 ```
