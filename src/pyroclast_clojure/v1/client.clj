@@ -1,6 +1,7 @@
 (ns pyroclast-clojure.v1.client
   (:require [clj-http.client :as http]
             [cheshire.core :as json]
+            [clojure.set :as cset]
             [manifold.deferred :as md]))
 
 (def default-region "us-west-2")
@@ -97,6 +98,13 @@
                 (partial md/error! promise))
      promise)))
 
+(def subscribe-remap {:group-id :pyroclast.consumer/group-id
+                      :consumer-instance-id :pyroclast.consumer-instance/id})
+(defn consumer-instance-map [config body]
+  (let [resp (json/parse-string body true)
+        remapped (cset/rename-keys resp subscribe-remap)]
+    (merge remapped config)))
+
 (defn topic-subscribe
   "Creates a new consumer instance, returns a consumer instance map able to
   manipulate your Pyroclast consumer.
@@ -123,7 +131,7 @@
                  :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
                 (fn [{:keys [status body] :as resp}]
                   (if (= 201 status)
-                    (md/success! prom (json/parse-string body true))
+                    (md/success! prom (consumer-instance-map config body))
                     (common-response prom resp)))
                 (partial md/error! prom))
      (deref prom))))
@@ -132,11 +140,12 @@
   "Takes a Pyroclast API config and a consumer instance map as returned by
   `topic-subscribe`. Polls topic for records. Returns a dereffable
   deferred with zero or more records."
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
-  (assert group-id "Must supply a consumer instance map with a :group-id")
-  (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
-  (let [promise (md/deferred)]
+  [{:keys [pyroclast.topic/read-key pyroclast.topic/id
+           pyroclast.consumer/group-id] :as config}]
+  (let [consumer-instance-id (:pyroclast.consumer-instance/id config)
+        promise (md/deferred)]
+    (assert group-id "Must supply a consumer instance map with a :group-id")
+    (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
     (http/post (topic-poll-url config group-id consumer-instance-id)
                {:async? true
                 :throw-exceptions false
@@ -152,9 +161,10 @@
 (defn topic-consumer-commit-offsets
   "Commit a consumer group instance's current offset. Ensures that after this operation
   succeeds, new subscriptions will not see records before the current offset."
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
-  (let [promise (md/deferred)]
+  [{:keys [pyroclast.topic/read-key pyroclast.topic/id
+           pyroclast.consumer/group-id] :as config}]
+  (let [promise (md/deferred)
+        consumer-instance-id (:pyroclast.consumer-instance/id config)]
     (http/post (topic-commit-url config group-id consumer-instance-id)
                {:async? true
                 :headers {"Content-type" "application/json"
@@ -170,11 +180,12 @@
     @promise))
 
 (defn- topic-consumer-seek-simple
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}
+  [{:keys [pyroclast.topic/read-key pyroclast.topic/id
+           pyroclast.consumer/group-id] :as config}
    direction]
   (assert (#{"beginning" "end"} direction) "seek direction must be one of :beginning or :end")
-  (let [promise (md/deferred)]
+  (let [promise (md/deferred)
+        consumer-instance-id (:pyroclast.consumer-instance/id config)]
     (http/post (topic-seek-url config group-id consumer-instance-id direction)
                {:async? true
                 :headers {"Content-type" "application/json"
@@ -191,16 +202,14 @@
 (defn topic-consumer-seek-beginning
   "Seek a consumer across all of it's assigned partitions to the last lowest
   uncommited offset."
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
-  (topic-consumer-seek-simple config consumer-instance-map "beginning"))
+  [consumer-instance-map]
+  (topic-consumer-seek-simple consumer-instance-map "beginning"))
 
 (defn topic-consumer-seek-end
   "Seek a consumer across all of it's assigned partitions to the last highest
   uncommited offset."
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}]
-  (topic-consumer-seek-simple config consumer-instance-map "end"))
+  [consumer-instance-map]
+  (topic-consumer-seek-simple consumer-instance-map "end"))
 
 (defn topic-consumer-seek
   "Seek by offset or timestamp through a topic.
@@ -215,12 +224,13 @@
   Examples:
   `{:partition \"1\" :offset 12}` - seek to a specific offset.
   `{:partition \"0\" :timestamp \"1508293577\"}` - seek to a timestamp."
-  [{:keys [pyroclast.topic/read-key pyroclast.topic/id] :as config}
-   {:keys [group-id consumer-instance-id] :as consumer-instance-map}
+  [{:keys [pyroclast.topic/read-key pyroclast.topic/id
+           pyroclast.consumer/group-id] :as config}
    partition-directives]
-  (assert (every? :partition partition-directives) "All partition directives must contain a :partition key.")
-  (assert (every? (fn [m] (or (:offset m) (:timestamp m))) partition-directives) "All partition directives must contain either a :offset or a :timestamp key")
-  (let [promise (md/deferred)]
+  (let [promise (md/deferred)
+        consumer-instance-id (:pyroclast.consumer-instance/id config)]
+    (assert (every? :partition partition-directives) "All partition directives must contain a :partition key.")
+    (assert (every? (fn [m] (or (:offset m) (:timestamp m))) partition-directives) "All partition directives must contain either a :offset or a :timestamp key")
     (http/post (topic-seek-url config group-id consumer-instance-id)
                {:async? true
                 :throw-exceptions false
