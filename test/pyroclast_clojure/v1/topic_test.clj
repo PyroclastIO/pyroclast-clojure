@@ -11,6 +11,7 @@
       (is @(client/topic-send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}))
       (is @(client/topic-send-events! config [{:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}
                                               {:value {:event-type "page-visit" :page "/console" :timestamp 1495072895032}}]))
+      (Thread/sleep 1000)
       (is (pos? (count @(client/topic-consumer-poll! config consumer-instance-map))))
       (is (client/topic-consumer-commit-offsets config consumer-instance-map))
       (is (empty? @(client/topic-consumer-poll! config consumer-instance-map)))
