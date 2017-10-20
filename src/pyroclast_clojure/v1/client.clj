@@ -125,7 +125,8 @@
                   (if (= 201 status)
                     (md/success! prom (json/parse-string body true))
                     (common-response prom resp)))
-                (partial md/error! prom))
+                (fn [resp]
+                  (common-response promise (ex-data resp))))
      (deref prom))))
 
 (defn topic-consumer-poll!
@@ -146,7 +147,8 @@
                  (if (= 200 status)
                    (md/success! promise (vec (json/parse-string body)))
                    (common-response promise resp)))
-               (partial md/error! promise))
+               (fn [resp]
+                 (common-response promise (ex-data resp))))
     promise))
 
 (defn topic-consumer-commit-offsets
@@ -165,7 +167,8 @@
                  (if (= 200 status)
                    (md/success! promise true)
                    (common-response promise resp)))
-               (partial md/error! promise))
+               (fn [resp]
+                 (common-response promise (ex-data resp))))
     ;; Probably want this to be synchronous to avoid late commits.
     @promise))
 
@@ -185,7 +188,8 @@
                  (if (= 200 status)
                    (md/success! promise true)
                    (common-response promise resp)))
-               (partial md/error! promise))
+               (fn [resp]
+                 (common-response promise (ex-data resp))))
     @promise))
 
 (defn topic-consumer-seek-beginning
@@ -232,7 +236,8 @@
                  (if (= 200 status)
                    (md/success! promise true)
                    (common-response promise resp)))
-               (partial md/error! promise))
+               (fn [resp]
+                 (common-response promise (ex-data resp))))
     @promise))
 
 (defn deployment-fetch-aggregate
@@ -258,7 +263,8 @@
                 (if (= 200 status)
                   (md/success! promise (json/parse-string body))
                   (common-response promise resp)))
-              (partial md/error! promise))
+              (fn [resp]
+                (common-response promise (ex-data resp))))
     promise))
 
 (defn deployment-fetch-aggregates
@@ -276,7 +282,8 @@
                 (if (= 200 status)
                   (md/success! promise (json/parse-string body))
                   (common-response promise resp)))
-              (partial md/error! promise))
+              (fn [resp]
+                (common-response promise (ex-data resp))))
     promise))
 
 ;; Unimplemented
