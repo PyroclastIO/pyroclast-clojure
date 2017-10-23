@@ -79,25 +79,32 @@
 (defn create-topic!
   "Creates a Pyroclast topic, returning a dereffable deferred containing
   a topic config map for use with the topic api."
-  [{:keys [pyroclast.api/master-key] :as config} topic-name]
-  (let [promise (md/deferred)]
-    (assert topic-name)
-    (http/post (topics-url config)
-               {:async? true
-                :throw-exceptions false
-                :headers {"Content-type" "application/json"
-                          "Authorization" master-key}
-                :body (json/generate-string {:name topic-name})
-                :as :json}
-               (fn [{:keys [status body] :as resp}]
-                 (if (= 201 status)
-                   (md/success! promise (merge
-                                         config
-                                         (cset/rename-keys body
-                                                           topic-key-remap)))
-                   (common-response promise resp)))
-               (partial md/error! promise))
-    promise))
+  ([{:keys [pyroclast.api/master-key] :as config} topic-name]
+   (create-topic! config topic-name {}))
+  ([{:keys [pyroclast.api/master-key] :as config} topic-name
+    {:keys [pyroclast.topic/retention-bytes pyroclast.topic/retention-ms foo] :as opts}]
+   (let [retention-bytes (or retention-bytes 2147483648)
+         retention-ms (or retention-ms 259200000)
+         promise (md/deferred)]
+     (assert topic-name)
+     (http/post (topics-url config)
+                {:async? true
+                 :throw-exceptions false
+                 :headers {"Content-type" "application/json"
+                           "Authorization" master-key}
+                 :body (json/generate-string {:name topic-name
+                                              :retention-bytes retention-bytes
+                                              :retention-ms retention-ms})
+                 :as :json}
+                (fn [{:keys [status body] :as resp}]
+                  (if (= 201 status)
+                    (md/success! promise (merge
+                                          config
+                                          (cset/rename-keys body
+                                                            topic-key-remap)))
+                    (common-response promise resp)))
+                (partial md/error! promise))
+     promise)))
 
 (defn get-topics
   "Returns a list of topic config maps for use with the Pyroclast API.
@@ -215,8 +222,7 @@
                  :throw-exceptions false
                  :headers {"Content-type" "application/json"
                            "Authorization" read-key}
-                 :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})
-                 }
+                 :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
                 (fn [{:keys [status body] :as resp}]
                   (if (= 201 status)
                     (md/success! prom (consumer-instance-map config body))
