@@ -11,6 +11,12 @@
     endpoint
     (str (format "https://api.%s.pyroclast.io" region))))
 
+(defn topics-url [config]
+  (format "%s/v1/topics" (base-url config)))
+
+(defn topic-url [{:keys [pyroclast.topic/id] :as config}]
+  (format "%s/v1/topics/%s" (base-url config) id))
+
 (defn topic-produce-url [{:keys [pyroclast.topic/id] :as config}]
   (format "%s/v1/topics/%s/produce" (base-url config) id))
 
@@ -51,12 +57,45 @@
     (throw (ex-info "Event requires :value key" {:event event}))))
 
 (defn- common-response [deferred {:keys [status body] :as response}]
-  (cond
-    (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
-    (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
-    (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
-    :else (md/error! deferred (ex-info (format "Unknown status %s. Open an issue on this repository if you're seeing this status." status)
-                                       {}))))
+  (println)
+  (let [parsed (try (json/parse-string body) (catch Exception e nil))]
+    (println (type parsed))
+    (cond
+      (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
+      (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
+      (get parsed "msg") (md/error! deferred (ex-info (get parsed "msg") parsed))
+      (= status 500) (md/error! deferred (ex-info (str "Server error: " body) {}))
+      :else (md/error! deferred (ex-info (format "Unknown status %s. Open an issue on this repository if you're seeing this status." status)
+                                         {})))))
+
+(def topic-key-remap {:id :pyroclast.topic/id
+                      :name :pyroclast.topic/name
+                      :retention-ms :pyroclast.topic/retention-ms
+                      :retention-bytes :pyroclast.topic/retention-bytes
+                      :read-key :pyroclast.topic/read-key
+                      :write-key :pyroclast.topic/write-key})
+(defn create-topic!
+  "Creates a Pyroclast topic, returning a dereffable deferred containing
+  a topic config map for use with the topic api."
+  [{:keys [pyroclast.api/master-key] :as config} topic-name]
+  (let [promise (md/deferred)]
+    (assert topic-name)
+    (http/post (topics-url config)
+               {:async? true
+                :throw-exceptions false
+                :headers {"Content-type" "application/json"
+                          "Authorization" master-key}
+                :body (json/generate-string {:name topic-name})
+                :as :json}
+               (fn [{:keys [status body] :as resp}]
+                 (if (= 201 status)
+                   (md/success! promise (merge
+                                         config
+                                         (cset/rename-keys body
+                                                           topic-key-remap)))
+                   (common-response promise resp)))
+               (partial md/error! promise))
+    promise))
 
 (defn topic-send-event!
   "Send a single event to a Pyroclast topic.
@@ -128,7 +167,8 @@
                  :throw-exceptions false
                  :headers {"Content-type" "application/json"
                            "Authorization" read-key}
-                 :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})}
+                 :body (json/generate-string {"auto.offset.reset" auto-offset-reset "partitions" partitions})
+                 }
                 (fn [{:keys [status body] :as resp}]
                   (if (= 201 status)
                     (md/success! prom (consumer-instance-map config body))
