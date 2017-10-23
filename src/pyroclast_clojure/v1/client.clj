@@ -61,9 +61,7 @@
     (throw (ex-info "Event requires :value key" {:event event}))))
 
 (defn- common-response [deferred {:keys [status body] :as response}]
-  (println)
   (let [parsed (try (json/parse-string body) (catch Exception e nil))]
-    (println (type parsed))
     (cond
       (= status 400) (md/error! deferred (ex-info "Request was malformed." {:response response}))
       (= status 401) (md/error! deferred (ex-info "API key unauthorized to perform this action." {}))
