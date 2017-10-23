@@ -101,6 +101,52 @@
                (partial md/error! promise))
     promise))
 
+(defn get-topics
+  "Returns a list of topic config maps for use with the Pyroclast API.
+  Returns a dereffable deferred."
+  [{:keys [pyroclast.api/master-key] :as config}]
+  (let [promise (md/deferred)]
+    (http/get (topics-url config)
+              {:async? true
+               :throw-exceptions false
+               :headers {"Content-type" "application/json"
+                         "Authorization" master-key}
+               :as :json}
+              (fn [{:keys [status body] :as resp}]
+                (if (= 200 status)
+                  (md/success! promise
+                               (mapv (fn [b]
+                                       (merge
+                                        config
+                                        (cset/rename-keys
+                                         b topic-key-remap)))
+                                     body))
+                  (common-response promise resp)))
+              (partial md/error! promise))
+    promise))
+
+(defn get-topic
+  "Returns a list of topic config maps for use with the Pyroclast API.
+  Returns a dereffable deferred."
+  [{:keys [pyroclast.api/master-key pyroclast.topic/id] :as config}]
+  (let [promise (md/deferred)]
+    (http/get (topic-url config)
+              {:async? true
+               :throw-exceptions false
+               :headers {"Content-type" "application/json"
+                         "Authorization" master-key}
+               :as :json}
+              (fn [{:keys [status body] :as resp}]
+                (if (= 200 status)
+                  (md/success! promise
+                               (merge
+                                config
+                                (cset/rename-keys
+                                 body topic-key-remap)))
+                  (common-response promise resp)))
+              (partial md/error! promise))
+    promise))
+
 (defn topic-send-event!
   "Send a single event to a Pyroclast topic.
   Event must be of the form {:value ...}.
