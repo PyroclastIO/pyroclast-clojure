@@ -4,10 +4,11 @@
          :topic-id ""
          :endpoint ""
          :format :json}
- :topic-client-config {:pyroclast.topic/write-key "7f66034b-944c-4cdc-945a-7f7000623ea2"
-                       :pyroclast.topic/id "topic-8b47a075-ed26-4ac1-9787-2fc376ecd1d8"
-                       :pyroclast.topic/read-key "8b4c000b-29be-4976-9b5e-c6d5291f6178"
-                       ;:pyroclast.api/region "us-west-2"
+ :admin-client-config {:pyroclast.api/master-key "user1"
+                       :pyroclast.api/endpoint "http://localhost:10556"}
+ :topic-client-config {:pyroclast.topic/write-key "cc5409fc-1e59-44e8-b1e8-0701d0a204de"
+                       :pyroclast.topic/id "topic-7d5d4716-1d91-4392-9126-053d5f76e2e7"
+                       :pyroclast.topic/read-key "3a6d9c33-86a7-4bb6-ad20-dd239fc93f94"
                        :pyroclast.api/endpoint "http://localhost:10556"}
  :aggregate-client-config {:pyroclast.deployment/id "59e918b9-ce65-4e77-a3ed-31c23b0bff10",
                            :pyroclast.deployment/read-key "d5e6f1e3-1751-4934-aee2-3f1bfafe23a2"
