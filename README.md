@@ -90,6 +90,10 @@ Read events from Pyroclast Topics.
 @(client/topic-consumer-poll! new-consumer-instance)
 ;; => []
 
+;; Get information about this consumer, including its current position:
+(client/topic-consumer-information consumer-instance-map)
+;; => [[group-id my-subscriber-group] [consumer-instance-id 5c27ce03-63a7-4edb-84d6-b5c1236cb9f4] [positions {1 94, 0 94}]] 
+
 ```
 
 ## Deployed Service APIs

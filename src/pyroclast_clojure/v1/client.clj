@@ -30,6 +30,10 @@
   (format "%s/v1/topics/%s/consumers/%s/instances/%s/poll" (base-url config)
           id consumer-group-name consumer-instance-id))
 
+(defn topic-information-url [{:keys [pyroclast.topic/id] :as config} consumer-group-name consumer-instance-id]
+  (format "%s/v1/topics/%s/consumers/%s/instances/%s" (base-url config)
+          id consumer-group-name consumer-instance-id))
+
 (defn topic-commit-url [{:keys [pyroclast.topic/id] :as config} consumer-group-name consumer-instance-id]
   (format "%s/v1/topics/%s/consumers/%s/instances/%s/commit" (base-url config)
           id consumer-group-name consumer-instance-id))
@@ -198,6 +202,28 @@
                (partial md/error! promise))
     promise))
 
+(defn topic-consumer-information
+  "Takes a Pyroclast API consumer instance map as returned by
+  `topic-subscribe`. Returns information about this consumer instance.
+  Returns an IDeref."
+  [{:keys [pyroclast.topic/read-key pyroclast.topic/id
+           pyroclast.consumer/group-id] :as config}]
+  (let [consumer-instance-id (:pyroclast.consumer-instance/id config)
+        promise (md/deferred)]
+    (assert group-id "Must supply a consumer instance map with a :group-id")
+    (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
+    (http/get (topic-information-url config group-id consumer-instance-id)
+              {:async? true
+               :throw-exceptions false
+               :headers {"Content-type" "application/json"
+                         "Authorization" read-key}}
+              (fn [{:keys [status body] :as resp}]
+                (if (= 200 status)
+                  (md/success! promise (vec (json/parse-string body)))
+                  (common-response promise resp)))
+              (partial md/error! promise))
+    promise))
+
 (defn topic-consumer-commit-offsets
   "Commit a consumer group instance's current offset. Ensures that after this operation
   succeeds, new subscriptions will not see records before the current offset."
@@ -232,7 +258,7 @@
                           "Authorization" read-key}
                 :throw-exceptions false
                 :as :text}
-               (fn [{:keys [status] :as resp}]
+               (fn [{:keys [status body] :as resp}]
                  (if (= 200 status)
                    (md/success! promise true)
                    (common-response promise resp)))
