@@ -6,5 +6,4 @@
                  [cheshire "5.7.1"]
                  [clj-http "3.5.0"]
                  [manifold "0.1.6"]]
-  :test-selectors {:roaming :roaming
-                   :topic :topic})
+  :test-selectors {:topic :topic})
