@@ -25,7 +25,8 @@ converted to json before sending, which is lossy for namespaced keys.
 (def config
   {:pyroclast.topic/id "topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6"
    :pyroclast.topic/write-key "d8b5869d-69a9-4935-9a35-cd0f67379124"
-   :pyroclast.api/region "us-west-2"})
+   :pyroclast.api/region "us-west-2"
+   :pyroclast.archiver/bucket "my-archiver-target-bucket"})
 
 ;; Send a single event asynchronously, returning a promise
 (def resp (topic-send-event! config {:value {:event-type "page-visit" :page "/home" :timestamp 1495072835000}}))
@@ -50,7 +51,8 @@ Read events from Pyroclast Topics.
 (def config
   {:pyroclast.topic/read-key "db621c74-0d8d-41ed-b4e2-d4279e8b46f8"
    :pyroclast.topic/id "topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6"
-   :pyroclast.api/region "us-west-2"})
+   :pyroclast.api/region "us-west-2"
+   :pyroclast.archiver/bucket "my-archiver-target-bucket"})
 
 ;; Subscribe to a topic, registering a new Consumer Group
 (def consumer-instance-map (client/topic-subscribe config "my-consumer-group"))
@@ -92,6 +94,6 @@ Read events from Pyroclast Topics.
 
 ;; Get information about this consumer, including its current position:
 (client/topic-consumer-information consumer-instance-map)
-;; => [[group-id my-subscriber-group] [consumer-instance-id 5c27ce03-63a7-4edb-84d6-b5c1236cb9f4] [positions {1 94, 0 94}]] 
-
+;; => {"topic-35e284dc-8b0c-4866-b33b-8895c25ff7f6" {"0" 1032388}}
+;; {"<topic-name>" {"<partition>" "<position>"}}
 ```

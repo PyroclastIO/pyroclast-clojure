@@ -1,15 +1,5 @@
-{:roaming {:endpoint "http://127.0.0.1:9700"}
- :topic {:read-api-key ""
-         :write-api-key ""
-         :topic-id ""
-         :endpoint ""
-         :format :json}
- :topic-client-config {:pyroclast.topic/write-key "7f66034b-944c-4cdc-945a-7f7000623ea2"
-                       :pyroclast.topic/id "topic-8b47a075-ed26-4ac1-9787-2fc376ecd1d8"
-                       :pyroclast.topic/read-key "8b4c000b-29be-4976-9b5e-c6d5291f6178"
-                       ;:pyroclast.api/region "us-west-2"
-                       :pyroclast.api/endpoint "http://localhost:10556"}
- :aggregate-client-config {:pyroclast.deployment/id "59e918b9-ce65-4e77-a3ed-31c23b0bff10",
-                           :pyroclast.deployment/read-key "d5e6f1e3-1751-4934-aee2-3f1bfafe23a2"
-                           ;:pyroclast.api/region "us-west-2"
-                           :pyroclast.api/endpoint "http://localhost:10555"}}
+{:topic-client-config {:pyroclast.topic/id "topic-530ed060-fc0a-45a8-adca-06ce6b4683d0"
+                       :pyroclast.archiver/bucket "gvickers-archiver-us-west-2"
+                       :pyroclast.topic/read-key ""
+                       :pyroclast.topic/write-key ""
+                       :pyroclast.api/region "us-west-2"}}
