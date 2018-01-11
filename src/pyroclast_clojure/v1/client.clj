@@ -55,7 +55,6 @@
   Event must be of the form {:value ...}.
   Returns a dereffable deferred."
   ([{:keys [pyroclast.topic/write-key pyroclast.topic/id] :as config} event]
-   (validate-event! event)
    (assert (contains? event :value) "Event requires value key")
    (p/chain (p/promise
              (fn [resolve reject]
