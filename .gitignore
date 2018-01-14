@@ -9,3 +9,6 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+.idea/libraries/
+release-js/pyroclast.js
+node_modules/

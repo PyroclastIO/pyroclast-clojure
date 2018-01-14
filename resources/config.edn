@@ -1,5 +1,5 @@
 {:topic-client-config {:pyroclast.topic/id "topic-530ed060-fc0a-45a8-adca-06ce6b4683d0"
                        :pyroclast.archiver/bucket "gvickers-archiver-us-west-2"
-                       :pyroclast.topic/read-key ""
-                       :pyroclast.topic/write-key ""
+                       :pyroclast.topic/read-key "4585b016-967b-4a0e-822d-6a10a0c4112a"
+                       :pyroclast.topic/write-key "5719d08f-a22d-4cae-83aa-2a47a8242dba"
                        :pyroclast.api/region "us-west-2"}}

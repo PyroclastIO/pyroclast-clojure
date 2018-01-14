@@ -1,8 +1,15 @@
 (ns pyroclast-clojure.v1.client
-  (:require [clj-http.client :as http]
-            [cheshire.core :as json]
+  (:require [kvlt.core :as http]
             [clojure.set :as cset]
-            [promesa.core :as p]))
+            [promesa.core :as p]
+            #?(:cljs [goog.string :as gstring])
+            #?(:cljs [goog.string.format])))
+#?(:cljs
+   (defn format
+         "Formats a string using goog.string.format.
+          e.g: (format \"Cost: %.2f\" 10.0234)"
+         [fmt & args]
+         (apply gstring/format fmt args)))
 
 (def default-region "us-west-2")
 
@@ -56,18 +63,23 @@
   Returns a dereffable deferred."
   ([{:keys [pyroclast.topic/write-key pyroclast.topic/id] :as config} event]
    (assert (contains? event :value) "Event requires value key")
-   (p/chain (p/promise
-             (fn [resolve reject]
-               (http/post (topic-produce-url config)
-                          {:async? true
-                           :accept :json
-                           :headers {"Content-type" "application/json"
-                                     "Authorization" write-key}
-                           :body (json/generate-string event)}
-                          resolve
-                          reject)))
+   (p/chain (http/request!
+             {:url (topic-produce-url config)
+              :method :post
+              :type :json
+              :headers {"Authorization" write-key}
+              :form-params event
+              :as :auto})
             (fn [{:keys [status]}]
-              (= 201 status)))))
+              (if (= status 201) true false)))))
+
+(def conf {:pyroclast.topic/id "topic-530ed060-fc0a-45a8-adca-06ce6b4683d0"
+           :pyroclast.archiver/bucket "gvickers-archiver-us-west-2"
+           :pyroclast.topic/read-key "4585b016-967b-4a0e-822d-6a10a0c4112a"
+           :pyroclast.topic/write-key "5719d08f-a22d-4cae-83aa-2a47a8242dba"
+           :pyroclast.api/region "us-west-2"})
+
+;;@(topic-send-event! conf {:value {:foo "bar"}})
 
 (defn topic-send-events!
   "Send a batch of events to a Pyroclast topic.
@@ -75,27 +87,18 @@
   Returns a dereffable deferred."
   ([{:keys [pyroclast.topic/write-key pyroclast.topic/id] :as config} events]
    (assert (every? #(contains? % :value) events) "All events require a value key")
-   (p/chain (p/promise
-             (fn [resolve reject]
-               (http/post (topic-bulk-produce-url config)
-                          {:async? true
-                           :accept :json
-                           :headers {"Content-type" "application/json"
-                                     "Authorization" write-key}
-                           :body (json/generate-string events)}
-                          resolve
-                          reject)))
+   (p/chain (http/request!
+             {:url (topic-bulk-produce-url config)
+              :method :post
+              :type :json
+              :headers {"Authorization" write-key}
+              :form-params events
+              :as :auto})
             (fn [{:keys [status]}]
               (= 201 status)))))
 
-
-
 (def subscribe-remap {:group-id :pyroclast.consumer/group-id
                       :consumer-instance-id :pyroclast.consumer-instance/id})
-(defn consumer-instance-map [config body]
-  (let [resp (json/parse-string body true)
-        remapped (cset/rename-keys resp subscribe-remap)]
-    (merge remapped config)))
 
 (defn topic-subscribe
   "Creates a new consumer instance, returns a consumer instance map able to
@@ -115,22 +118,20 @@
    (when (not (re-matches #"[a-zA-Z0-9-_]+" consumer-group-name))
      (throw (ex-info "Consumer group name must be a non-empty string of alphanumeric characters." {})))
    (assert (#{"earliest" "latest"} auto-offset-reset) ":offset options must be one of \"earliest\" or \"latest\"")
-   @(p/chain (p/promise (fn [resolve reject]
-                          (http/post (topic-subscribe-url config consumer-group-name)
-                                     {:async? true
-                                      :accept :json
-                                      :headers {"Content-type" "application/json"
-                                                "Authorization" read-key}
-                                      :body (json/generate-string {"auto.offset.reset" auto-offset-reset
-                                                                   "partitions" partitions
-                                                                   "bucket" bucket})
-                                      :as :auto}
-                                     resolve
-                                     reject)))
+   @(p/chain (http/request!
+              {:url (topic-subscribe-url config consumer-group-name)
+               :method :post
+               :type :json
+               :headers {"Authorization" read-key}
+               :body  {"auto.offset.reset" auto-offset-reset
+                       "partitions" partitions
+                       "bucket" bucket}
+               :as :auto})
              (fn [{:keys [status body]}]
                (when (= 201 status)
                  (merge (cset/rename-keys body subscribe-remap)
                         config))))))
+
 
 (defn topic-consumer-poll!
   "Takes a Pyroclast API config and a consumer instance map as returned by
@@ -141,19 +142,15 @@
   (let [consumer-instance-id (:pyroclast.consumer-instance/id config)]
     (assert group-id "Must supply a consumer instance map with a :group-id")
     (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
-    (p/chain (p/promise (fn [resolve reject]
-                          (http/post (topic-poll-url config group-id consumer-instance-id)
-                                     {:async? true
-                                      :accept :json
-                                      :throw-exceptions false
-                                      :headers {"Content-type" "application/json"
-                                                "Authorization" read-key}
-                                      :as :auto}
-                                     resolve
-                                     reject)))
-             (fn [{:keys [status body]}]
-               (when (= 200 status)
-                 body)))))
+    (p/chain  (http/request!
+               {:url (topic-poll-url config group-id consumer-instance-id)
+                :method :post
+                :type :json
+                :headers {"Authorization" read-key}
+                :as :auto})
+              (fn [{:keys [status body]}]
+                (when (= 200 status)
+                  body)))))
 
 (defn topic-consumer-information
   "Takes a Pyroclast API consumer instance map as returned by
@@ -164,18 +161,15 @@
   (let [consumer-instance-id (:pyroclast.consumer-instance/id config)]
     (assert group-id "Must supply a consumer instance map with a :group-id")
     (assert consumer-instance-id "Must supply a consumer instance map with a :consumer-instance-id")
-    (p/chain (p/promise (fn [resolve reject]
-                          (http/get (topic-information-url config group-id consumer-instance-id)
-                                    {:async? true
-                                     :accept :json
-                                     :throw-exceptions false
-                                     :headers {"Content-type" "application/json"
-                                               "Authorization" read-key}
-                                     :as :auto}
-                                    resolve
-                                    reject)))
+    (p/chain (http/request!
+              {:url (topic-information-url config group-id consumer-instance-id)
+               :method :get
+               :type :json
+               :headers {"Authorization" read-key}
+               :as :json})
              (fn [{:keys [status body]}]
                (when (= 200 status)
+                 (println body)
                  (into {}
                        (map (fn [[k v]] ;; clj-http auto converts keys to kw's, hack around that for now.
                               [(name k) (into {}
@@ -184,21 +178,19 @@
                                               v)]))
                        (:positions body)))))))
 
+(taoensso.timbre/set-level! :info)
 (defn topic-consumer-commit-offsets
   "Commit a consumer group instance's current offset. Ensures that after this operation
   succeeds, new subscriptions will not see records before the current offset."
   [{:keys [pyroclast.topic/read-key pyroclast.topic/id
            pyroclast.consumer/group-id] :as config}]
   (let [consumer-instance-id (:pyroclast.consumer-instance/id config)]
-    @(p/chain (p/promise (fn [resolve reject]
-                           (http/post (topic-commit-url config group-id consumer-instance-id)
-                                      {:async? true
-                                       :accept :json
-                                       :headers {"Content-type" "application/json"
-                                                 "Authorization" read-key}
-                                       :as :auto}
-                                      resolve
-                                      reject)))
+    @(p/chain (http/request!
+               {:url (topic-commit-url config group-id consumer-instance-id)
+                :method :post
+                :type :json
+                :headers {"Authorization" read-key}
+                :as :auto})
               (fn [{:keys [status]}]
                 (= status 200)))))
 
@@ -208,16 +200,13 @@
    direction]
   (assert (#{"beginning" "end"} direction) "seek direction must be one of :beginning or :end")
   (let [consumer-instance-id (:pyroclast.consumer-instance/id config)]
-    @(p/chain (p/promise
-               (fn [resolve reject]
-                 (http/post (topic-seek-url config group-id consumer-instance-id direction)
-                            {:async? true
-                             :accept :json
-                             :headers {"Content-type" "application/json"
-                                       "Authorization" read-key}
-                             :as :text}
-                            resolve
-                            reject)))
+    @(p/chain (http/request!
+                {:url (topic-seek-url config group-id consumer-instance-id direction)
+                 :method :post
+                 :type :json
+                 :headers {"Content-type" "application/json"
+                           "Authorization" read-key}
+                 :as :text})
               (fn [{:keys [status]}]
                 (= status 200)))))
 
@@ -254,13 +243,16 @@
   (let [consumer-instance-id (:pyroclast.consumer-instance/id config)]
     (assert (every? :partition partition-directives) "All partition directives must contain a :partition key.")
     (assert (every? (fn [m] (or (:offset m) (:timestamp m))) partition-directives) "All partition directives must contain either a :offset or a :timestamp key")
-    @(p/promise (fn [resolve reject]
-                  (http/post (topic-seek-url config group-id consumer-instance-id)
-                             {:async? true
-                              :accept :json
-                              :headers {"Content-type" "application/json"
-                                        "Authorization" read-key}
+    @(p/chain (http/request!
+                {:url (topic-seek-url config group-id consumer-instance-id)
+                 :async? true
+                 :method :post
+                 :type :json
+                 :headers {"Authorization" read-key}
+                 :form-params partition-directives
+                 :as :auto})
+              (fn [{:keys [status]}]
+                (= status 200)))))
 
-                              :body (json/generate-string partition-directives)}
-                             resolve
-                             reject)))))
+(defn ^:export hello_world []
+  #?(:cljs (js/console.log "Hello world!")))
